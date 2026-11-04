@@ -1,0 +1,173 @@
+name: Rilis dari run
+
+# Publishes one green "Build CoganSU" run of main as a release, like Cogan Kernel's "Rilis dari run".
+# Checks before publishing: the run is green and from main, build.env is complete and from the run's
+# commit, the APK's SHA256 matches the build, its v2 certificate matches the build and kernel/cogansu.mk.
+# Every version keeps its own release (tag cogansu-<version code>): an existing tag stops the run. There
+# is no "timpa" box: the version code is 30000 + commit count, so a tag only repeats for the same commit.
+# Tick "diuji di HP" only if the owner tested this APK with a Cogan Kernel of the same commit.
+#
+# Menerbitkan satu run "Build CoganSU" yang hijau dari main sebagai rilis, seperti "Rilis dari run" di
+# Cogan Kernel. Artifact bertahan 90 hari.
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "ID run Build CoganSU yang hijau dari main / green Build CoganSU run ID from main"
+        required: true
+        type: string
+      release_type:
+        description: "Pre-Release atau / or Release (Release = Latest, dibaca cek pembaruan aplikasi / read by the app's update check)"
+        type: choice
+        default: "Pre-Release"
+        options:
+          - "Pre-Release"
+          - "Release"
+      diuji_di_hp:
+        description: "Sudah diuji owner di HP bersama Cogan Kernel dari commit yang sama / tested by the owner on the phone"
+        type: boolean
+        default: false
+      catatan:
+        description: "Catatan Bahasa Indonesia (opsional; \\n = baris baru) / Indonesian note (optional; \\n = new line)"
+        type: string
+        default: ""
+      catatan_en:
+        description: "Catatan English (opsional; \\n = baris baru) / English note (optional; \\n = new line)"
+        type: string
+        default: ""
+      teks_saja:
+        description: "Buat catatan & teks Telegram saja, tanpa menerbitkan rilis / notes and Telegram text only"
+        type: boolean
+        default: false
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: release-from-run
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Rilis dari run ${{ inputs.run_id }} (${{ inputs.release_type }})
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_RUN: ${{ inputs.run_id }}
+      RELEASE_TYPE: ${{ inputs.release_type }}
+      TESTED: ${{ inputs.diuji_di_hp }}
+      NOTE: ${{ inputs.catatan }}
+      NOTE_EN: ${{ inputs.catatan_en }}
+      TEXT_ONLY: ${{ inputs.teks_saja }}
+      UPSTREAM: https://github.com/tiann/KernelSU.git
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: KernelSU main (pembanding / for comparison)
+        run: git fetch --no-tags "$UPSTREAM" '+refs/heads/main:refs/remotes/upstream/main'
+
+      - name: Periksa run / check the run
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN" =~ ^[0-9]+$ ]] || { echo "::error::run_id: angka / a number"; exit 1; }
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > run.json
+          python3 - <<'PY'
+          import json
+          run = json.load(open("run.json"))
+          want = {"conclusion": "success", "head_branch": "main", "path": ".github/workflows/build-cogansu.yml"}
+          bad = [f"{k} {run.get(k)!r} (harus / must be {v!r})" for k, v in want.items() if run.get(k) != v]
+          if bad:
+              raise SystemExit("Run tidak bisa dirilis / cannot be released: " + "; ".join(bad))
+          PY
+
+      - name: Unduh file / download the files
+        run: |
+          set -euo pipefail
+          mkdir files info
+          # The APK is an unarchived artifact: fetch it by ID, as it is, and check its digest.
+          gh api --paginate "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN/artifacts?per_page=100" \
+            --jq '.artifacts[] | select(.expired == false) | [.id, .name, (.digest // "")] | @tsv' > artifacts.tsv
+          while IFS=$'\t' read -r id name digest; do
+            case "$name" in
+              CoganSU_*.apk)
+                gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" > "files/$name"
+                # An unarchived artifact may still arrive wrapped in a ZIP that holds only itself.
+                if [ "sha256:$(sha256sum "files/$name" | cut -d' ' -f1)" != "$digest" ] \
+                   && [ "$(unzip -Z1 "files/$name" 2>/dev/null)" = "$name" ]; then
+                  unzip -p "files/$name" "$name" > unwrapped && mv unwrapped "files/$name"
+                fi
+                [ "sha256:$(sha256sum "files/$name" | cut -d' ' -f1)" = "$digest" ] \
+                  || { echo "::error::$name: SHA256 berbeda dari artifact / differs from the artifact"; exit 1; } ;;
+              build-info)
+                gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$id/zip" > info.zip
+                unzip -q info.zip build.env -d info ;;
+            esac
+          done < artifacts.tsv
+          [ -f info/build.env ] || { echo "::error::build-info tidak ada (kedaluwarsa?) / missing (expired?)"; exit 1; }
+          tested_flag=(); [ "$TESTED" = "true" ] && tested_flag=(--tested)
+          preview=(); [ "$TEXT_ONLY" = "true" ] && preview=(--text-only)
+          sha="$(python3 -c 'import json; print(json.load(open("run.json"))["head_sha"])')"
+          python3 scripts/release_from_run.py info files --repo "$GITHUB_REPOSITORY" --sha "$sha" \
+            "${tested_flag[@]}" "${preview[@]}" --note "$NOTE" --note-en "$NOTE_EN" --telegram telegram \
+            --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > notes.md
+          ls -la files
+
+      - name: Terbitkan / publish
+        if: ${{ !inputs.teks_saja }}
+        run: |
+          set -euo pipefail
+          tag="$(sed -n 's/^RELEASE=//p' info/release.env)"
+          title="$(sed -n 's/^RELEASE_NAME=//p' info/release.env)"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::Rilis $tag sudah ada; setiap versi punya rilis sendiri / release $tag exists; every version keeps its own release"
+            exit 1
+          fi
+          sha="$(python3 -c 'import json; print(json.load(open("run.json"))["head_sha"])')"
+          # GITHUB_TOKEN cannot tag a commit whose .github/workflows differ from this run's (HTTP 403):
+          # then the tag goes on this run's commit; the notes still link the build run and its commit.
+          workflows_at() { gh api "repos/$GITHUB_REPOSITORY/contents/.github?ref=$1" --jq '.[] | select(.name == "workflows") | .sha'; }
+          there="$(workflows_at "$sha")"
+          here="$(workflows_at "$GITHUB_SHA")"
+          target="$sha"; [ -n "$there" ] && [ "$there" = "$here" ] || target="$GITHUB_SHA"
+          (cd files && sha256sum -- * > checksums.txt)
+          mode=(--prerelease); [ "$RELEASE_TYPE" = "Release" ] && mode=(--latest)
+          gh release create "$tag" files/* --repo "$GITHUB_REPOSITORY" --target "$target" "${mode[@]}" \
+            --title "$title" --notes-file notes.md
+          {
+            echo "## Rilis dari run / release from run"
+            echo "- 🇮🇩 Terbit: [$tag]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$tag) ($RELEASE_TYPE)$([ "$TESTED" = "true" ] && echo ", diuji di HP")"
+            echo "- 🇬🇧 Published: [$tag]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$tag) ($RELEASE_TYPE)$([ "$TESTED" = "true" ] && echo ", tested on the phone")"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Catatan dan teks Telegram / notes and Telegram text
+        run: |
+          {
+            echo "## 📣 Telegram · ID/EN"
+            if [ "$TEXT_ONLY" = "true" ]; then
+              echo "- 🇮🇩 Mode teks saja: tidak ada rilis yang diterbitkan atau diubah."
+              echo "- 🇬🇧 Text-only mode: no release was published or changed."
+            fi
+            echo
+            cat telegram/summary.md
+            echo
+            echo '<details><summary>📝 Catatan rilis / Release notes</summary>'
+            echo
+            cat notes.md
+            echo
+            echo '</details>'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Ringkasan bila gagal / summary on failure
+        if: failure() || cancelled()
+        run: |
+          {
+            echo "## ❌ Rilis dari run gagal / Release from run failed"
+            echo
+            echo "- 🇮🇩 Tidak ada rilis yang diterbitkan. Alasannya ada di pesan error di atas (langkah merah pertama)."
+            echo "- 🇬🇧 No release was published. The reason is in the error message above (the first red step)."
+          } >> "$GITHUB_STEP_SUMMARY"

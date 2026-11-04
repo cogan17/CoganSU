@@ -45,15 +45,17 @@ CoganSU is a root manager of our own for the **Xiaomi 14T Pro (rothko)**, built 
 | `manager/` | the CoganSU app (Kotlin/Compose); Cogan-specific code in `manager/app/src/main/java/me/weishu/kernelsu/cogan/` |
 | `userspace/ksud/` | the `ksud` daemon (Rust) shipped inside the APK |
 | `scripts/cogansu_cert.py` | computes the signing certificate's size and hash, fills `kernel/cogansu.mk` |
-| `.github/workflows/build-cogansu.yml` | the **Build CoganSU** workflow (manual) |
+| `.github/workflows/` | manual workflows: **Build CoganSU**, **Rilis dari run** (release from run), **Cek pembaruan** (update check) |
 
 ### Building
 
 1. Once: create the release key and store it as repository secrets, see **[docs/kunci.en.md](docs/kunci.en.md)**.
-2. Run the **Build CoganSU** workflow (*Actions* tab). The APK is in the `CoganSU` artifact; the run summary shows the certificate's size and hash.
+2. Run the **Build CoganSU** workflow (*Actions* tab). The APK is the `CoganSU_…-release.apk` artifact (unzipped), next to `build-info`; the run summary shows the certificate's size and hash.
 3. First run: put those values in `kernel/cogansu.mk` (`python3 scripts/cogansu_cert.py write <size> <hash>`), commit, and build again.
-4. Tick **rilis** to publish a GitHub release (only once `kernel/cogansu.mk` matches).
+4. Publish with the **Rilis dari run** workflow, given the `run_id` of a green Build CoganSU run of `main` (only once `kernel/cogansu.mk` matches). Choose *Release* so the app's update check sees it; *teks_saja* only makes the notes and Telegram text.
 5. Build Cogan Kernel from the same CoganSU commit, see **[docs/integrasi-cogan-kernel.md](docs/integrasi-cogan-kernel.md)**.
+
+The **Cek pembaruan** workflow only checks: newest KernelSU (commits not merged yet), whether the SUSFS patch still fits (now and after merging the newest KernelSU), the last CoganSU release, the last build, and Cogan Bridge in Cogan Kernel.
 
 ### Credits and licence
 

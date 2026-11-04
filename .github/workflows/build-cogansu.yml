@@ -1,21 +1,16 @@
 # Build CoganSU: ksud (arm64) and the CoganSU manager APK, signed with the CoganSU release key.
-# Manual only (owner: save Actions runs). Ticking "rilis" also publishes a GitHub release, which the
-# manager's update check reads.
+# Manual only (owner: save Actions runs). It never publishes: a green run of main is released with
+# "Rilis dari run" (like Cogan Kernel). Artifacts: the APK as it is (unarchived) and build-info (build.env).
 #
 # Membangun CoganSU: ksud (arm64) dan APK manager CoganSU, ditandatangani kunci rilis CoganSU.
-# Hanya manual. Centang "rilis" untuk sekaligus menerbitkan rilis GitHub.
+# Hanya manual dan tidak menerbitkan apa pun; run hijau dari main dirilis lewat "Rilis dari run".
 name: Build CoganSU
 
 on:
   workflow_dispatch:
-    inputs:
-      rilis:
-        description: "Terbitkan rilis / Publish a release"
-        type: boolean
-        default: false
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: build-cogansu
@@ -29,9 +24,10 @@ jobs:
     name: ksud (arm64)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Upstream tags (version name)
         # Only upstream's vX.Y.Z tags, so "git describe" reads v3.3.1-N-g<commit> and not a CoganSU release tag.
@@ -61,7 +57,7 @@ jobs:
           source .github/scripts/setup-rust-build.sh aarch64-linux-android 26
           cargo build --target "$TRIPLE" --release --manifest-path ./userspace/ksud/Cargo.toml
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: ksud-aarch64
           path: target/aarch64-linux-android/release/ksud
@@ -71,15 +67,16 @@ jobs:
     needs: ksud
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
-      - name: Upstream tags (version name)
+      - name: Upstream tags (version name) and main
         # Only upstream's vX.Y.Z tags, so "git describe" reads v3.3.1-N-g<commit> and not a CoganSU release tag.
         run: |
           git tag -l | xargs -r git tag -d >/dev/null
-          git fetch --no-tags "$UPSTREAM" 'refs/tags/v*:refs/tags/v*'
+          git fetch --no-tags "$UPSTREAM" 'refs/tags/v*:refs/tags/v*' '+refs/heads/main:refs/remotes/upstream/main'
 
       - name: Signing key / Kunci tanda tangan
         id: key
@@ -135,7 +132,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v8.0.2
         with:
           name: ksud-aarch64
           path: ksud-aarch64
@@ -159,15 +156,49 @@ jobs:
             || { echo "::error::the APK is not signed (v2) with the release key"; exit 1; }
           name="$(basename "$apk")"
           code="$(echo "$name" | sed -n 's/.*_\([0-9]\+\)-release\.apk$/\1/p')"
-          echo "path=$apk" >> "$GITHUB_OUTPUT"
-          echo "name=$name" >> "$GITHUB_OUTPUT"
-          echo "code=$code" >> "$GITHUB_OUTPUT"
-          echo "version=$(git describe --tags --always)" >> "$GITHUB_OUTPUT"
+          {
+            echo "path=$apk"
+            echo "name=$name"
+            echo "code=$code"
+            echo "version=$(git describe --tags --always)"
+          } >> "$GITHUB_OUTPUT"
 
-      - uses: actions/upload-artifact@v7
+      - name: Build info
+        env:
+          STATE: ${{ steps.cert.outputs.state }}
+          SIZE: ${{ steps.key.outputs.size }}
+          HASH: ${{ steps.key.outputs.hash }}
+          APK: ${{ steps.apk.outputs.path }}
+          VERSION: ${{ steps.apk.outputs.version }}
+          CODE: ${{ steps.apk.outputs.code }}
+        run: |
+          mkdir -p build-info
+          {
+            echo "VERSION=$VERSION"
+            echo "CODE=$CODE"
+            echo "COMMIT=$GITHUB_SHA"
+            echo "PACKAGE=com.cogan.su"
+            echo "APK=$(basename "$APK")"
+            echo "APK_SHA256=$(sha256sum "$APK" | cut -d' ' -f1)"
+            echo "CERT_SIZE=$SIZE"
+            echo "CERT_HASH=$HASH"
+            echo "CERT_STATE=$STATE"
+            echo "UPSTREAM_COMMIT=$(git merge-base HEAD upstream/main)"
+          } > build-info/build.env
+          cat build-info/build.env
+
+      # The APK as it is (no ZIP around it): Rilis dari run downloads it and checks its digest.
+      - uses: actions/upload-artifact@v7.0.1
         with:
-          name: CoganSU
           path: ${{ steps.apk.outputs.path }}
+          archive: false
+          retention-days: 90
+
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: build-info
+          path: build-info/build.env
+          retention-days: 90
 
       - name: Summary / Ringkasan
         env:
@@ -193,31 +224,12 @@ jobs:
             echo "| Commit | \`${GITHUB_SHA::12}\` | \`${GITHUB_SHA::12}\` |"
             echo "| Sertifikat / Certificate | \`$SIZE\` \`$HASH\` | \`$SIZE\` \`$HASH\` |"
             echo "| Kernel | $kid | $ken |"
+            echo
+            if [ "$STATE" = match ] && [ "$GITHUB_REF_NAME" = main ]; then
+              echo "- 🇮🇩 Untuk merilis: jalankan **Rilis dari run** dengan run_id \`$GITHUB_RUN_ID\`."
+              echo "- 🇬🇧 To release: run **Rilis dari run** with run_id \`$GITHUB_RUN_ID\`."
+            else
+              echo "- 🇮🇩 Run ini tidak bisa dirilis (harus dari main dan \`kernel/cogansu.mk\` cocok)."
+              echo "- 🇬🇧 This run cannot be released (it must be from main with \`kernel/cogansu.mk\` matching)."
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Publish release / Terbitkan rilis
-        if: inputs.rilis
-        env:
-          GH_TOKEN: ${{ github.token }}
-          STATE: ${{ steps.cert.outputs.state }}
-          APK: ${{ steps.apk.outputs.path }}
-          VERSION: ${{ steps.apk.outputs.version }}
-          CODE: ${{ steps.apk.outputs.code }}
-        run: |
-          if [ "$STATE" != match ]; then
-            echo "::error::kernel/cogansu.mk is not filled in; no release until the kernel knows this key"
-            exit 1
-          fi
-          tag="cogansu-$CODE"
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "::error::release $tag already exists (every version keeps its own release)"
-            exit 1
-          fi
-          cat > notes.md <<EOF
-          **CoganSU $VERSION ($CODE)** · commit \`${GITHUB_SHA::12}\`
-
-          🇮🇩 Root manager khusus Xiaomi 14T Pro (rothko), berbasis KernelSU. Pasang bersama Cogan Kernel yang dibangun dari commit CoganSU yang sama.
-
-          🇬🇧 Root manager for Xiaomi 14T Pro (rothko) only, based on KernelSU. Install it with a Cogan Kernel built from the same CoganSU commit.
-          EOF
-          gh release create "$tag" "$APK" --target "$GITHUB_SHA" --title "CoganSU $VERSION ($CODE)" --notes-file notes.md
