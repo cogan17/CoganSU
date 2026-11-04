@@ -3,7 +3,6 @@ package me.weishu.kernelsu.ui
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
-import android.os.SystemClock
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -116,18 +115,14 @@ class MainActivity : ComponentActivity() {
 
     private val intentChannel = Channel<Intent>(capacity = Channel.BUFFERED)
     private var contentReady = false
-    private var splashStartedAt = 0L
-    private val splashAnimationDurationMs = 500L
 
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
-        splashStartedAt = SystemClock.uptimeMillis()
         super.onCreate(savedInstanceState)
-        splashScreen.setKeepOnScreenCondition {
-            !contentReady || SystemClock.uptimeMillis() - splashStartedAt < splashAnimationDurationMs
-        }
+        // CoganSU: no minimum splash time, only until the first frame is ready.
+        splashScreen.setKeepOnScreenCondition { !contentReady }
 
         val isManager = Natives.isManager
         if (isManager && Natives.kernelUAPIVersion == Natives.managerUAPIVersion) install()

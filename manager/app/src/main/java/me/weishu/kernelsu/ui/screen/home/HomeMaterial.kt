@@ -151,8 +151,7 @@ fun HomePagerMaterial(
                 state = state,
                 actions = actions,
             )
-            CoganKernelCard(info = state.coganKernel, onOpenUrl = actions.onOpenUrl)
-            InfoCard(systemInfo = state.systemInfo)
+            InfoCard(systemInfo = state.systemInfo, coganKernel = state.coganKernel)
             SupportLinks(onOpenUrl = actions.onOpenUrl)
             Spacer(
                 Modifier.height(
@@ -374,30 +373,12 @@ private fun WarningCard(
     }
 }
 
+// CoganSU: the real kernel release from Cogan Bridge; "Kernel version" below stays uname, which SUSFS can spoof.
 @Composable
-private fun CoganKernelCard(
-    info: CoganKernelInfo,
-    onOpenUrl: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val summary = when (info.state) {
-        CoganKernelState.Detected -> "${info.release}\n${info.featureLine}"
-        CoganKernelState.NotCogan -> stringResource(R.string.cogan_kernel_not_detected)
-        CoganKernelState.Unknown -> stringResource(R.string.cogan_kernel_unknown)
-    }
-    SegmentedColumn(modifier = modifier.fillMaxWidth()) {
-        item {
-            SegmentedListItem(
-                onClick = { onOpenUrl(Cogan.KERNEL_RELEASES_URL) },
-                headlineContent = { Text(stringResource(R.string.cogan_kernel_title)) },
-                supportingContent = { Text(summary) },
-                leadingContent = {
-                    Icon(Icons.Filled.Memory, stringResource(R.string.cogan_kernel_title))
-                },
-                trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
-            )
-        }
-    }
+private fun coganKernelSummary(info: CoganKernelInfo): String = when (info.state) {
+    CoganKernelState.Detected -> "${info.release}\n${info.featureLine}"
+    CoganKernelState.NotCogan -> stringResource(R.string.cogan_kernel_not_detected)
+    CoganKernelState.Unknown -> stringResource(R.string.cogan_kernel_unknown)
 }
 
 // CoganSU: links to Cogan Kernel and its community instead of upstream's support/learn links.
@@ -447,6 +428,7 @@ private fun SupportLinks(
 private fun InfoCard(
     systemInfo: SystemInfo,
     modifier: Modifier = Modifier,
+    coganKernel: CoganKernelInfo = CoganKernelInfo.Unknown,
 ) {
     @Composable
     fun InfoCardItem(
@@ -493,6 +475,13 @@ private fun InfoCard(
                     icon = Icons.Filled.Tag,
                     label = stringResource(R.string.home_manager_version),
                     content = systemInfo.managerVersion,
+                )
+            }
+            item {
+                InfoCardItem(
+                    icon = Icons.Filled.Memory,
+                    label = stringResource(R.string.cogan_kernel_title),
+                    content = coganKernelSummary(coganKernel),
                 )
             }
             item {

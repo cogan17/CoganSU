@@ -7,9 +7,9 @@
 
     <style name="Theme.KernelSU.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@android:color/background_light</item>
-        <item name="windowSplashScreenIconBackgroundColor">@color/ic_splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_cogan</item>
-        <item name="windowSplashScreenAnimationDuration">500</item>
+        <!-- CoganSU: no logo flash on launch, straight into the manager. -->
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="windowSplashScreenAnimationDuration">0</item>
         <item name="postSplashScreenTheme">@style/Theme.KernelSU</item>
     </style>
 
