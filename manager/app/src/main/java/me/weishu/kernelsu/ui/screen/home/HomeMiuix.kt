@@ -1,5 +1,6 @@
 package me.weishu.kernelsu.ui.screen.home
 
+import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -31,12 +32,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.DeveloperBoard
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Tag
-import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.rounded.CheckCircleOutline
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.runtime.Composable
@@ -57,6 +60,9 @@ import androidx.compose.ui.unit.sp
 import me.weishu.kernelsu.KernelVersion
 import me.weishu.kernelsu.Natives
 import me.weishu.kernelsu.R
+import me.weishu.kernelsu.cogan.Cogan
+import me.weishu.kernelsu.cogan.CoganKernelInfo
+import me.weishu.kernelsu.cogan.CoganKernelState
 import me.weishu.kernelsu.ui.component.WarningLevel
 import me.weishu.kernelsu.ui.component.dialog.rememberConfirmDialog
 import me.weishu.kernelsu.ui.component.miuix.WarningCard
@@ -163,9 +169,26 @@ fun HomePagerMiuix(
                         if (state.showRootWarning) {
                             WarningCard(stringResource(id = R.string.grant_root_failed))
                         }
+                        if (!state.isSupportedDevice) {
+                            WarningCard(
+                                stringResource(
+                                    R.string.cogan_device_unsupported,
+                                    state.systemInfo.deviceModel,
+                                    Build.DEVICE.orEmpty(),
+                                )
+                            )
+                        }
+                        if (state.coganKernel.deviceMismatch) {
+                            WarningCard(stringResource(R.string.cogan_kernel_device_mismatch, state.coganKernel.device))
+                        }
                         StatusCard(
                             state = state,
                             actions = actions,
+                        )
+                        CoganKernelCard(
+                            info = state.coganKernel,
+                            onOpenUrl = actions.onOpenUrl,
+                            modifier = Modifier.fillMaxWidth(),
                         )
                         InfoCard(
                             systemInfo = state.systemInfo,
@@ -434,38 +457,78 @@ private fun StatusCard(
 }
 
 @Composable
+private fun CoganKernelCard(
+    info: CoganKernelInfo,
+    onOpenUrl: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val summary = when (info.state) {
+        CoganKernelState.Detected -> "${info.release}\n${info.featureLine}"
+        CoganKernelState.NotCogan -> stringResource(R.string.cogan_kernel_not_detected)
+        CoganKernelState.Unknown -> stringResource(R.string.cogan_kernel_unknown)
+    }
+    Card(modifier = modifier) {
+        ArrowPreference(
+            title = stringResource(R.string.cogan_kernel_title),
+            summary = summary,
+            startAction = {
+                Icon(
+                    imageVector = Icons.Filled.Memory,
+                    contentDescription = stringResource(R.string.cogan_kernel_title),
+                    modifier = Modifier.padding(end = 6.dp),
+                    tint = colorScheme.onBackground,
+                )
+            },
+            onClick = { onOpenUrl(Cogan.KERNEL_RELEASES_URL) },
+        )
+    }
+}
+
+// CoganSU: links to Cogan Kernel and its community instead of upstream's support/learn links.
+@Composable
 private fun SupportLinks(
     onOpenUrl: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val learnMoreUrl = stringResource(R.string.home_learn_kernelsu_url)
-
     Card(modifier = modifier) {
         ArrowPreference(
-            title = stringResource(R.string.home_support_title),
-            summary = stringResource(R.string.home_support_content),
+            title = stringResource(R.string.cogan_link_kernel_title),
+            summary = stringResource(R.string.cogan_link_kernel_summary),
             startAction = {
                 Icon(
-                    imageVector = Icons.Filled.VolunteerActivism,
-                    contentDescription = stringResource(R.string.home_support_title),
+                    imageVector = Icons.Filled.Download,
+                    contentDescription = stringResource(R.string.cogan_link_kernel_title),
                     modifier = Modifier.padding(end = 6.dp),
                     tint = colorScheme.onBackground,
                 )
             },
-            onClick = { onOpenUrl("https://patreon.com/weishu") },
+            onClick = { onOpenUrl(Cogan.KERNEL_RELEASES_URL) },
         )
         ArrowPreference(
-            title = stringResource(R.string.home_learn_kernelsu),
-            summary = stringResource(R.string.home_click_to_learn_kernelsu),
+            title = stringResource(R.string.cogan_link_guide_title),
+            summary = stringResource(R.string.cogan_link_guide_summary),
             startAction = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                    contentDescription = stringResource(R.string.home_learn_kernelsu),
+                    contentDescription = stringResource(R.string.cogan_link_guide_title),
                     modifier = Modifier.padding(end = 6.dp),
                     tint = colorScheme.onBackground,
                 )
             },
-            onClick = { onOpenUrl(learnMoreUrl) },
+            onClick = { onOpenUrl(Cogan.KERNEL_GUIDE_URL) },
+        )
+        ArrowPreference(
+            title = stringResource(R.string.cogan_link_telegram_title),
+            summary = stringResource(R.string.cogan_link_telegram_summary),
+            startAction = {
+                Icon(
+                    imageVector = Icons.Filled.Forum,
+                    contentDescription = stringResource(R.string.cogan_link_telegram_title),
+                    modifier = Modifier.padding(end = 6.dp),
+                    tint = colorScheme.onBackground,
+                )
+            },
+            onClick = { onOpenUrl(Cogan.TELEGRAM_URL) },
         )
     }
 }

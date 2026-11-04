@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Teks CoganSU (Bahasa Indonesia). -->
+<resources>
+    <string name="cogan_device_unsupported">CoganSU hanya untuk Xiaomi 14T Pro (rothko). HP ini %1$s (%2$s): root mungkin jalan, tetapi tidak ada yang diuji di HP ini.</string>
+    <string name="cogan_kernel_title">Cogan Kernel</string>
+    <string name="cogan_kernel_unknown">Menunggu root untuk membaca Cogan Bridge</string>
+    <string name="cogan_kernel_not_detected">Kernel ini bukan Cogan Kernel. Ketuk untuk mengunduhnya.</string>
+    <string name="cogan_kernel_device_mismatch">Cogan Kernel ini dibuat untuk %1$s, bukan untuk HP ini.</string>
+    <string name="cogan_link_kernel_title">Unduh Cogan Kernel</string>
+    <string name="cogan_link_kernel_summary">Rilis kernel untuk Xiaomi 14T Pro</string>
+    <string name="cogan_link_guide_title">Panduan pasang</string>
+    <string name="cogan_link_guide_summary">Cadangkan boot, lalu flash lewat Kernel Flasher atau TWRP</string>
+    <string name="cogan_link_telegram_title">Komunitas Telegram</string>
+    <string name="cogan_link_telegram_summary">Kabar, rilis dan bantuan</string>
+    <string name="cogan_based_on">Berbasis KernelSU karya weishu dan para kontributornya (GPL-3.0)</string>
+</resources>

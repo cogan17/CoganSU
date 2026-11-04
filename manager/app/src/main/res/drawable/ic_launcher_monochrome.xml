@@ -1,22 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- CoganSU monogram: a crowned G, drawn after the Cogan logo. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-
-    <group
-        android:scaleX="0.135"
-        android:scaleY="0.135">
-        <path
-            android:pathData="M 259 259 H 541 V 541 H 259 V 259 Z"
-            android:strokeWidth="18"
-            android:strokeColor="#000000" />
-        <path
-            android:fillColor="#000000"
-            android:pathData="M 257 257 H 407 V 407 H 257 V 257 Z" />
-        <path
-            android:fillColor="#000000"
-            android:pathData="M 393 393 H 543 V 543 H 393 V 393 Z" />
-    </group>
+    <path
+        android:fillColor="#000000"
+        android:pathData="M45,34.5 L43.5,27 L48.6,30.4 L54,24 L59.4,30.4 L64.5,27 L63,34.5 Z" />
+    <path
+        android:pathData="M72.5,47.5 L66,41.5 L52,41.5 Q39,41.5 39,57 Q39,72.5 52,72.5 L63,72.5 L72,63.5 L63,57.5 L53,57.5"
+        android:strokeWidth="7"
+        android:strokeColor="#000000"
+        android:strokeLineJoin="miter"
+        android:strokeMiterLimit="10" />
 </vector>

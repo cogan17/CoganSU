@@ -1,5 +1,6 @@
 package me.weishu.kernelsu.ui.screen.home
 
+import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -25,12 +26,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.DeveloperBoard
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Tag
-import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Warning
@@ -63,6 +66,9 @@ import androidx.compose.ui.unit.dp
 import me.weishu.kernelsu.KernelVersion
 import me.weishu.kernelsu.Natives
 import me.weishu.kernelsu.R
+import me.weishu.kernelsu.cogan.Cogan
+import me.weishu.kernelsu.cogan.CoganKernelInfo
+import me.weishu.kernelsu.cogan.CoganKernelState
 import me.weishu.kernelsu.ui.component.WarningLevel
 import me.weishu.kernelsu.ui.component.dialog.rememberConfirmDialog
 import me.weishu.kernelsu.ui.component.material.ExpressiveScaffold
@@ -129,10 +135,23 @@ fun HomePagerMaterial(
             if (state.showRootWarning) {
                 WarningCard(stringResource(id = R.string.grant_root_failed))
             }
+            if (!state.isSupportedDevice) {
+                WarningCard(
+                    stringResource(
+                        R.string.cogan_device_unsupported,
+                        state.systemInfo.deviceModel,
+                        Build.DEVICE.orEmpty(),
+                    )
+                )
+            }
+            if (state.coganKernel.deviceMismatch) {
+                WarningCard(stringResource(R.string.cogan_kernel_device_mismatch, state.coganKernel.device))
+            }
             StatusCard(
                 state = state,
                 actions = actions,
             )
+            CoganKernelCard(info = state.coganKernel, onOpenUrl = actions.onOpenUrl)
             InfoCard(systemInfo = state.systemInfo)
             SupportLinks(onOpenUrl = actions.onOpenUrl)
             Spacer(
@@ -356,31 +375,67 @@ private fun WarningCard(
 }
 
 @Composable
+private fun CoganKernelCard(
+    info: CoganKernelInfo,
+    onOpenUrl: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val summary = when (info.state) {
+        CoganKernelState.Detected -> "${info.release}\n${info.featureLine}"
+        CoganKernelState.NotCogan -> stringResource(R.string.cogan_kernel_not_detected)
+        CoganKernelState.Unknown -> stringResource(R.string.cogan_kernel_unknown)
+    }
+    SegmentedColumn(modifier = modifier.fillMaxWidth()) {
+        item {
+            SegmentedListItem(
+                onClick = { onOpenUrl(Cogan.KERNEL_RELEASES_URL) },
+                headlineContent = { Text(stringResource(R.string.cogan_kernel_title)) },
+                supportingContent = { Text(summary) },
+                leadingContent = {
+                    Icon(Icons.Filled.Memory, stringResource(R.string.cogan_kernel_title))
+                },
+                trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
+            )
+        }
+    }
+}
+
+// CoganSU: links to Cogan Kernel and its community instead of upstream's support/learn links.
+@Composable
 private fun SupportLinks(
     onOpenUrl: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val learnMoreUrl = stringResource(R.string.home_learn_kernelsu_url)
-
     SegmentedColumn(modifier = modifier.fillMaxWidth()) {
         item {
             SegmentedListItem(
-                onClick = { onOpenUrl("https://patreon.com/weishu") },
-                headlineContent = { Text(stringResource(R.string.home_support_title)) },
-                supportingContent = { Text(stringResource(R.string.home_support_content)) },
+                onClick = { onOpenUrl(Cogan.KERNEL_RELEASES_URL) },
+                headlineContent = { Text(stringResource(R.string.cogan_link_kernel_title)) },
+                supportingContent = { Text(stringResource(R.string.cogan_link_kernel_summary)) },
                 leadingContent = {
-                    Icon(Icons.Filled.VolunteerActivism, stringResource(R.string.home_support_title))
+                    Icon(Icons.Filled.Download, stringResource(R.string.cogan_link_kernel_title))
                 },
                 trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
             )
         }
         item {
             SegmentedListItem(
-                onClick = { onOpenUrl(learnMoreUrl) },
-                headlineContent = { Text(stringResource(R.string.home_learn_kernelsu)) },
-                supportingContent = { Text(stringResource(R.string.home_click_to_learn_kernelsu)) },
+                onClick = { onOpenUrl(Cogan.KERNEL_GUIDE_URL) },
+                headlineContent = { Text(stringResource(R.string.cogan_link_guide_title)) },
+                supportingContent = { Text(stringResource(R.string.cogan_link_guide_summary)) },
                 leadingContent = {
-                    Icon(Icons.AutoMirrored.Filled.MenuBook, stringResource(R.string.home_learn_kernelsu))
+                    Icon(Icons.AutoMirrored.Filled.MenuBook, stringResource(R.string.cogan_link_guide_title))
+                },
+                trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
+            )
+        }
+        item {
+            SegmentedListItem(
+                onClick = { onOpenUrl(Cogan.TELEGRAM_URL) },
+                headlineContent = { Text(stringResource(R.string.cogan_link_telegram_title)) },
+                supportingContent = { Text(stringResource(R.string.cogan_link_telegram_summary)) },
+                leadingContent = {
+                    Icon(Icons.Filled.Forum, stringResource(R.string.cogan_link_telegram_title))
                 },
                 trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
             )

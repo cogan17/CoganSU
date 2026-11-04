@@ -2,6 +2,8 @@ package me.weishu.kernelsu.ui.screen.home
 
 import androidx.compose.runtime.Immutable
 import me.weishu.kernelsu.KernelVersion
+import me.weishu.kernelsu.cogan.Cogan
+import me.weishu.kernelsu.cogan.CoganKernelInfo
 import me.weishu.kernelsu.ui.util.module.LatestVersionInfo
 
 @Immutable
@@ -24,12 +26,17 @@ data class HomeUiState(
     val latestVersionInfo: LatestVersionInfo,
     val currentManagerVersionCode: Long,
     val systemInfo: SystemInfo,
+    // CoganSU
+    val isSupportedDevice: Boolean = Cogan.isSupportedDevice(),
+    val coganKernel: CoganKernelInfo = CoganKernelInfo.Unknown,
 ) {
     val isSELinuxPermissive: Boolean
         get() = systemInfo.selinuxStatus == "Permissive"
 
+    // CoganSU: Cogan Kernel builds the root driver in (GKI mode) on purpose, so upstream's notice that
+    // GKI mode is for testing only does not apply here.
     val showGkiWarning: Boolean
-        get() = ksuVersion != null && lkmMode == false
+        get() = false
 
     val showLkmUpdate: Boolean
         get() = isManager &&

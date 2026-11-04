@@ -23,8 +23,10 @@ val managerVersionCode = rootProject.extra["managerVersionCode"] as Int
 val managerVersionName = rootProject.extra["managerVersionName"] as String
 
 val isPrBuild = project.findProperty("IS_PR_BUILD")?.toString()?.toBoolean() ?: false
-val defaultManagerPackageName = if (isPrBuild) "me.weishu.kernelsu.pr" else "me.weishu.kernelsu"
-val defaultManagerName = if (isPrBuild) "KernelSU PR" else "KernelSU"
+// CoganSU: own package and name. The kernel finds the manager by this package name and by its
+// signing certificate (kernel/cogansu.mk), so both must match the kernel build.
+val defaultManagerPackageName = if (isPrBuild) "com.cogan.su.pr" else "com.cogan.su"
+val defaultManagerName = if (isPrBuild) "CoganSU PR" else "CoganSU"
 val managerPackageName = project.findProperty("KSU_PACKAGE_NAME")?.toString() ?: defaultManagerPackageName
 val managerName = project.findProperty("KSU_NAME")?.toString() ?: defaultManagerName
 
@@ -160,7 +162,8 @@ android {
         }
 
         ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64", "riscv64")
+            // CoganSU is built for one arm64 phone (Xiaomi 14T Pro, rothko).
+            abiFilters += listOf("arm64-v8a")
         }
     }
 

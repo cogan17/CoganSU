@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.weishu.kernelsu.BuildConfig
 import me.weishu.kernelsu.Natives
+import me.weishu.kernelsu.cogan.Cogan
 import me.weishu.kernelsu.data.repository.SettingsRepository
 import me.weishu.kernelsu.data.repository.SettingsRepositoryImpl
 import me.weishu.kernelsu.getKernelVersion
@@ -35,7 +36,9 @@ class HomeViewModel(
 
     fun refresh() {
         viewModelScope.launch {
-            val baseState = withContext(Dispatchers.IO) { buildState() }
+            val baseState = withContext(Dispatchers.IO) {
+                buildState().copy(coganKernel = Cogan.readKernelInfo())
+            }
             _uiState.update { baseState }
             if (baseState.checkUpdateEnabled) {
                 val latestVersionInfo = withContext(Dispatchers.IO) { checkNewVersion() }

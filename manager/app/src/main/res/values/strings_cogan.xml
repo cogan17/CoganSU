@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CoganSU strings. Indonesian in values-in/strings_cogan.xml. -->
+<resources>
+    <string name="cogan_device_unsupported">CoganSU is made only for Xiaomi 14T Pro (rothko). This phone is %1$s (%2$s): root may work, but nothing here is tested on it.</string>
+    <string name="cogan_kernel_title">Cogan Kernel</string>
+    <string name="cogan_kernel_unknown">Waiting for root to read Cogan Bridge</string>
+    <string name="cogan_kernel_not_detected">This kernel is not Cogan Kernel. Tap to download it.</string>
+    <string name="cogan_kernel_device_mismatch">This Cogan Kernel was built for %1$s, not for this phone.</string>
+    <string name="cogan_link_kernel_title">Download Cogan Kernel</string>
+    <string name="cogan_link_kernel_summary">Kernel releases for Xiaomi 14T Pro</string>
+    <string name="cogan_link_guide_title">Installation guide</string>
+    <string name="cogan_link_guide_summary">Back up boot, then flash with Kernel Flasher or TWRP</string>
+    <string name="cogan_link_telegram_title">Telegram community</string>
+    <string name="cogan_link_telegram_summary">News, releases and help</string>
+    <string name="cogan_based_on">Based on KernelSU by weishu and its contributors (GPL-3.0)</string>
+</resources>

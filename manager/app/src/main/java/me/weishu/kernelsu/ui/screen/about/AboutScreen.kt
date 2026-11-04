@@ -6,6 +6,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.dropUnlessResumed
 import me.weishu.kernelsu.BuildConfig
 import me.weishu.kernelsu.R
+import me.weishu.kernelsu.cogan.Cogan
 import me.weishu.kernelsu.ui.LocalUiMode
 import me.weishu.kernelsu.ui.UiMode
 import me.weishu.kernelsu.ui.navigation3.LocalNavigator
@@ -16,9 +17,9 @@ fun AboutScreen() {
     val uriHandler = LocalUriHandler.current
     val htmlString = stringResource(
         id = R.string.about_source_code,
-        "<b><a href=\"https://github.com/tiann/KernelSU\">GitHub</a></b>",
-        "<b><a href=\"https://t.me/KernelSU\">Telegram</a></b>"
-    )
+        "<b><a href=\"${Cogan.MANAGER_REPO_URL}\">GitHub</a></b>",
+        "<b><a href=\"${Cogan.TELEGRAM_URL}\">Telegram</a></b>"
+    ) + "<br/><a href=\"${Cogan.UPSTREAM_URL}\">" + stringResource(R.string.cogan_based_on) + "</a>"
     val state = AboutUiState(
         title = stringResource(R.string.about),
         appName = stringResource(R.string.app_name),
