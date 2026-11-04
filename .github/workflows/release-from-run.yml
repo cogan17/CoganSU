@@ -81,7 +81,8 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$SOURCE_RUN" =~ ^[0-9]+$ ]] || { echo "::error::run_id: angka / a number"; exit 1; }
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN" > run.json 2>/dev/null \
+            || { echo "::error::run_id $SOURCE_RUN tidak ada di $GITHUB_REPOSITORY (ID run repo lain, mis. Cogan Kernel?). Ambil ID dari URL run Build CoganSU: .../actions/runs/<ID> / run $SOURCE_RUN is not in this repository"; exit 1; }
           python3 - <<'PY'
           import json
           run = json.load(open("run.json"))
@@ -115,6 +116,8 @@ jobs:
             esac
           done < artifacts.tsv
           [ -f info/build.env ] || { echo "::error::build-info tidak ada (kedaluwarsa?) / missing (expired?)"; exit 1; }
+          [ "$(sed -n 's/^CERT_STATE=//p' info/build.env)" = match ] \
+            || { echo "::error::Run ini dibangun saat kernel/cogansu.mk belum cocok dengan kunci rilis; isi kernel/cogansu.mk lalu build lagi / built before kernel/cogansu.mk matched the release key"; exit 1; }
           tested_flag=(); [ "$TESTED" = "true" ] && tested_flag=(--tested)
           preview=(); [ "$TEXT_ONLY" = "true" ] && preview=(--text-only)
           sha="$(python3 -c 'import json; print(json.load(open("run.json"))["head_sha"])')"
