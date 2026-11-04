@@ -38,8 +38,9 @@ perform_cleanup() {
 
 # Sets up or update KernelSU environment
 setup_kernelsu() {
-    echo "[+] Setting up KernelSU..."
-    test -d "$GKI_ROOT/KernelSU" || git clone https://github.com/tiann/KernelSU && echo "[+] Repository cloned."
+    echo "[+] Setting up CoganSU (KernelSU)..."
+    # CoganSU: cloned into the KernelSU folder, so patches written for KernelSU (SUSFS) still apply.
+    test -d "$GKI_ROOT/KernelSU" || git clone https://github.com/cogan17/CoganSU "$GKI_ROOT/KernelSU" && echo "[+] Repository cloned."
     cd "$GKI_ROOT/KernelSU"
     git stash && echo "[-] Stashed current changes."
     if [ "$(git status | grep -Po 'v\d+(\.\d+)*' | head -n1)" ]; then
@@ -47,7 +48,7 @@ setup_kernelsu() {
     fi
     git pull && echo "[+] Repository updated."
     if [ -z "${1-}" ]; then
-        git checkout "$(git describe --abbrev=0 --tags)" && echo "[-] Checked out latest tag."
+        git checkout "$(git describe --abbrev=0 --tags 2>/dev/null || echo main)" && echo "[-] Checked out latest tag (or main)."
     else
         git checkout "$1" && echo "[-] Checked out $1." || echo "[-] Checkout default branch"
     fi
