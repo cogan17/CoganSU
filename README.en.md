@@ -47,7 +47,8 @@
 
 - ✅ The **KernelSU** (tiann) root manager with an identity of its own: name **CoganSU**, package `com.cogan.su`, signed with the CoganSU release key
 - ✅ Made for the **Xiaomi 14T Pro (`rothko`)**: other phones get a red warning on Home (checked from the device codename, not from the kernel name, which can be disguised)
-- ✅ A **Cogan Kernel** card on Home: the real kernel version and the **SUSFS · NoMount · BBG** features, read from **Cogan Bridge** (`/sys/kernel/cogan`), so it stays right even when SUSFS spoofs `uname`
+- ✅ A **Cogan Kernel** row on Home, right under Manager version: the real kernel version and the **SUSFS · NoMount · BBG** features, read from **Cogan Bridge** (`/sys/kernel/cogan`). **Kernel version** below it stays `uname`, so it shows the spoofed version when SUSFS spoofs it
+- ✅ Opens straight into Home, without a splash logo
 - ✅ No "GKI mode is for testing only" notice: Cogan Kernel builds root into the kernel on purpose
 - ✅ Download Cogan Kernel, installation guide and Telegram community links on Home; the update check reads CoganSU releases
 - ✅ Superuser, App Profile, modules, metamodules and WebUI work as in KernelSU; modules and the allowlist in `/data/adb` are kept when moving from KernelSU
@@ -101,7 +102,8 @@ KernelSU's commit history is kept as is, with CoganSU's changes on top, so Kerne
 
 | Build | Result |
 |---|---|
-| — | ⏳ No release yet. The first release waits for the release key and the CoganSU variant of Cogan Kernel |
+| [`v26.11.04-r3`](https://github.com/cogan17/CoganSU/releases/tag/v26.11.04-r3) (Pre-Release) + Cogan Kernel r38 | ✅ Tested by the owner on the phone, 4 Nov 2026 ~18:37 WIB: **Working**, Cogan Kernel card · SUSFS · NoMount · BBG |
+| `main` `v3.3.1-51-gae06aba8` (CI build, not released) + Cogan Kernel r38 | ✅ Tested by the owner on the phone, 4 Nov 2026 ~22:41 WIB: Cogan Kernel under Manager version with the real version, Kernel version shows the SUSFS-spoofed version, no splash logo |
 
 </details>
 
