@@ -1,0 +1,45 @@
+name: Cek pembaruan
+
+# Like Cogan Kernel's "Cek pembaruan" (owner 26 Okt 2026: "workflow yg bisa Check saja, hanya bisa
+# check"): one button, no schedule or automatic trigger (save runs). Compares CoganSU main with the
+# newest KernelSU (release, main, commits not merged yet by area), SUSFS (whether its KernelSU patch
+# still fits CoganSU, and whether it would fit after merging KernelSU main), CoganSU itself (release,
+# commits since, last Build CoganSU, kernel/cogansu.mk) and Cogan Kernel (Cogan Bridge ABI as the app
+# reads it, CoganSU integration). Two-language summary (scripts/cek_pembaruan.py). Builds, publishes and
+# writes nothing.
+#
+# Hanya mengecek: tidak membangun, tidak menerbitkan, tidak menulis apa pun.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: cek-pembaruan
+  cancel-in-progress: true
+
+jobs:
+  cek:
+    name: Cek / check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: KernelSU main
+        run: git fetch --no-tags https://github.com/tiann/KernelSU.git '+refs/heads/main:refs/remotes/upstream/main'
+
+      - name: Cek pembaruan / check for updates
+        run: |
+          set -euo pipefail
+          # The same text in the log too: readable when the summary page does not load.
+          python3 scripts/cek_pembaruan.py --repo "$GITHUB_REPOSITORY" --out updates.md
+          cat updates.md >> "$GITHUB_STEP_SUMMARY"

@@ -41,13 +41,13 @@ GitHub → repo **CoganSU** → *Settings* → *Secrets and variables* → *Acti
 
 ## 3. Daftarkan sertifikat ke kernel
 
-1. Jalankan workflow **Build CoganSU** (tanpa centang rilis).
+1. Jalankan workflow **Build CoganSU**.
 2. Ringkasan run menampilkan **Sertifikat**: ukuran (mis. `0x0577`) dan hash (64 huruf/angka). Ini data publik, bukan rahasia.
 3. Isi `kernel/cogansu.mk`:
    ```sh
    python3 scripts/cogansu_cert.py write 0x0577 <hash>
    ```
    lalu commit. (Bisa juga dari APK yang sudah ditandatangani: `python3 scripts/cogansu_cert.py apk CoganSU.apk`.)
-4. Build lagi: ringkasan sekarang menulis ✅ *cocok dengan kernel/cogansu.mk*, dan rilis boleh diterbitkan.
+4. Build lagi: ringkasan sekarang menulis ✅ *cocok dengan kernel/cogansu.mk*, dan run itu boleh dirilis lewat **Rilis dari run**.
 
 Sejak itu, setiap build memeriksa bahwa kunci di secret masih sama dengan `kernel/cogansu.mk`; bila berbeda, build berhenti.

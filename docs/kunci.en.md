@@ -38,13 +38,13 @@ GitHub → **CoganSU** repository → *Settings* → *Secrets and variables* →
 
 ## 3. Register the certificate in the kernel
 
-1. Run the **Build CoganSU** workflow (release unticked).
+1. Run the **Build CoganSU** workflow.
 2. The run summary shows the **Certificate**: size (e.g. `0x0577`) and hash (64 hex digits). This is public data, not a secret.
 3. Fill in `kernel/cogansu.mk`:
    ```sh
    python3 scripts/cogansu_cert.py write 0x0577 <hash>
    ```
    and commit. (From a signed APK: `python3 scripts/cogansu_cert.py apk CoganSU.apk`.)
-4. Build again: the summary now says ✅ *matches kernel/cogansu.mk*, and a release may be published.
+4. Build again: the summary now says ✅ *matches kernel/cogansu.mk*, and that run may be released with **Rilis dari run**.
 
 From then on every build checks that the key in the secrets still matches `kernel/cogansu.mk`, and stops if it does not.

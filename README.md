@@ -45,15 +45,17 @@ CoganSU adalah root manager versi sendiri untuk **Xiaomi 14T Pro (rothko)**, dib
 | `manager/` | aplikasi CoganSU (Kotlin/Compose); bagian khusus Cogan di `manager/app/src/main/java/me/weishu/kernelsu/cogan/` |
 | `userspace/ksud/` | daemon `ksud` (Rust) yang ikut di dalam APK |
 | `scripts/cogansu_cert.py` | menghitung ukuran dan hash sertifikat tanda tangan, mengisi `kernel/cogansu.mk` |
-| `.github/workflows/build-cogansu.yml` | workflow **Build CoganSU** (manual) |
+| `.github/workflows/` | workflow manual: **Build CoganSU**, **Rilis dari run**, **Cek pembaruan** |
 
 ### Membangun
 
 1. Sekali saja: buat kunci rilis dan simpan sebagai secret repo, lihat **[docs/kunci.md](docs/kunci.md)**.
-2. Jalankan workflow **Build CoganSU** (tab *Actions*). Hasilnya APK di artifact `CoganSU`; ringkasan run menampilkan ukuran dan hash sertifikat.
+2. Jalankan workflow **Build CoganSU** (tab *Actions*) dengan *Release Type* `CI`. Hasilnya artifact `CoganSU_…-release.apk` (APK apa adanya) dan `build-info`; ringkasan run menampilkan ukuran dan hash sertifikat.
 3. Run pertama: isi `kernel/cogansu.mk` dengan nilai itu (`python3 scripts/cogansu_cert.py write <ukuran> <hash>`), commit, lalu build lagi.
-4. Centang **rilis** untuk menerbitkan rilis GitHub (hanya bila `kernel/cogansu.mk` sudah cocok).
+4. Terbitkan, seperti Cogan Kernel: langsung dari form Build CoganSU (*Release Type* `Pre-Release`/`Release`, *Build Revision* `rN` → rilis `vYY.MM.DD-rN`; kosong = nomor run), atau belakangan lewat **Rilis dari run** dengan `run_id` run yang hijau dari `main` (centang *timpa* bila tag yang sama sudah ada). Hanya bila `kernel/cogansu.mk` sudah cocok. Pilih *Release* agar dibaca cek pembaruan di aplikasi; *teks_saja* hanya membuat catatan dan teks Telegram.
 5. Bangun Cogan Kernel dari commit CoganSU yang sama, lihat **[docs/integrasi-cogan-kernel.md](docs/integrasi-cogan-kernel.md)**.
+
+Workflow **Cek pembaruan** hanya mengecek: KernelSU terbaru (commit yang belum digabung), apakah patch SUSFS masih cocok (sekarang dan bila KernelSU terbaru digabung), rilis CoganSU terakhir, build terakhir, dan Cogan Bridge di Cogan Kernel.
 
 ### Kredit dan lisensi
 
