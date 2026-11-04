@@ -97,6 +97,10 @@ data class CoganKernelInfo(
     val noMount: Boolean = false,
     val bbg: Boolean = false,
 ) {
+    /** Prefer the root-only bridge over uname, which SUSFS can disguise. */
+    fun displayRelease(reportedRelease: String): String =
+        if (state == CoganKernelState.Detected && release.isNotBlank()) release else reportedRelease
+
     /** The kernel was built for a phone other than the one it booted on. */
     val deviceMismatch: Boolean
         get() = state == CoganKernelState.Detected && device.isNotEmpty() &&

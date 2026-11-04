@@ -144,8 +144,9 @@ class SettingsViewModel(
         val oldMode = repo.uiMode
         val currentThemeMode = repo.themeMode
 
-        val newThemeMode = when (oldMode) {
-            "material" if mode == "miuix" -> {
+        // CoganSU: Masculine shares Material components; preserve the saved color preference.
+        val newThemeMode = when {
+            oldMode != "miuix" && mode == "miuix" -> {
                 val colorMode = ColorMode.fromValue(currentThemeMode)
                 val baseMode = if (colorMode == ColorMode.DARK_AMOLED) 2 else currentThemeMode
                 if (repo.miuixMonet && !colorMode.isMonet) {
@@ -155,7 +156,7 @@ class SettingsViewModel(
                 } else baseMode
             }
 
-            "miuix" if mode == "material" -> {
+            oldMode == "miuix" && mode != "miuix" -> {
                 val colorMode = ColorMode.fromValue(currentThemeMode)
                 if (colorMode.isMonet) {
                     colorMode.toNonMonetMode()

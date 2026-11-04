@@ -152,7 +152,8 @@ fun SettingPagerMiuix(
                         OverlayDropdownPreference(
                             title = stringResource(id = R.string.settings_ui_mode),
                             summary = stringResource(id = R.string.settings_ui_mode_summary),
-                            items = UiMode.entries.map { it.name },
+                            // CoganSU: keep labels and persisted values in the same order.
+                            items = listOf(stringResource(R.string.cogan_style_masculine), "Material", "Miuix"),
                             startAction = {
                                 Icon(
                                     Icons.Rounded.DisplaySettings,
@@ -161,7 +162,7 @@ fun SettingPagerMiuix(
                                     tint = colorScheme.onBackground
                                 )
                             },
-                            selectedIndex = if (uiState.uiMode == UiMode.Material.value) 1 else 0,
+                            selectedIndex = UiMode.STYLE_VALUES.indexOf(uiState.uiMode).coerceAtLeast(0),
                             onSelectedIndexChange = actions.onSetUiModeIndex
                         )
                         ArrowPreference(

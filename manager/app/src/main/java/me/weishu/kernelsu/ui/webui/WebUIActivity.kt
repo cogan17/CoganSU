@@ -57,7 +57,9 @@ class WebUIActivity : ComponentActivity() {
                     if (key in listOf("color_mode", "key_color", "color_style", "color_spec")) {
                         appSettings = ThemeController.getAppSettings()
                     } else if (key == "ui_mode") {
+                        // CoganSU: refresh the preset as well as the component family.
                         uiModeValue = settingsRepo.uiMode
+                        appSettings = ThemeController.getAppSettings()
                     }
                 }
                 prefs.registerOnSharedPreferenceChangeListener(listener)

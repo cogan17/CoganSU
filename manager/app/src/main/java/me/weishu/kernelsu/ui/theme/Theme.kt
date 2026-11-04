@@ -49,6 +49,8 @@ data class AppSettings(
     val keyColor: Int,
     val paletteStyle: PaletteStyle,
     val colorSpec: ColorSpec.SpecVersion,
+    // CoganSU: fixed dark palette, independent of wallpaper and saved color settings.
+    val masculine: Boolean = false,
 )
 
 val PaletteStyle.supportsSpec2025: Boolean
@@ -96,7 +98,11 @@ object ThemeController {
             ColorSpec.SpecVersion.SPEC_2025
         }
 
-        return AppSettings(colorMode, keyColor, paletteStyle, colorSpec)
+        val masculine = uiMode == UiMode.MASCULINE_VALUE
+        return AppSettings(
+            if (masculine) ColorMode.DARK_AMOLED else colorMode,
+            keyColor, paletteStyle, colorSpec, masculine,
+        )
     }
 }
 

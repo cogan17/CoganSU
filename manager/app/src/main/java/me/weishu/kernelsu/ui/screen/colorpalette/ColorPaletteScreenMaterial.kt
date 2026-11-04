@@ -85,6 +85,7 @@ import androidx.compose.ui.unit.dp
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import me.weishu.kernelsu.R
+import me.weishu.kernelsu.ui.UiMode
 import me.weishu.kernelsu.ui.component.bottombar.useNavigationRail
 import me.weishu.kernelsu.ui.component.material.ExpressiveScaffold
 import me.weishu.kernelsu.ui.component.material.ExpressiveToggleButton
@@ -106,6 +107,8 @@ fun ColorPaletteScreenMaterial(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val uiState = state.uiState
+    // CoganSU: keep layout/accessibility controls available with the fixed dark preset.
+    val masculine = uiState.uiMode == UiMode.MASCULINE_VALUE
     val currentColorMode = state.currentColorMode
     val currentKeyColor = uiState.keyColor
     val colorStyle = state.currentPaletteStyle
@@ -138,7 +141,15 @@ fun ColorPaletteScreenMaterial(
                 .nestedScroll(scrollBehavior.nestedScrollConnection),
             verticalArrangement = Arrangement.spacedBy(13.dp)
         ) {
-            item {
+            if (masculine) item {
+                Text(
+                    text = stringResource(R.string.cogan_style_masculine_summary),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            if (!masculine) item {
                 ThemePreviewCard(
                     keyColor = currentKeyColor,
                     isDark = isDark,
@@ -148,7 +159,7 @@ fun ColorPaletteScreenMaterial(
                 )
             }
 
-            item {
+            if (!masculine) item {
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 16.dp),
@@ -184,7 +195,7 @@ fun ColorPaletteScreenMaterial(
                 }
             }
 
-            item {
+            if (!masculine) item {
                 val options = listOf(
                     listOf(ColorMode.SYSTEM) to stringResource(R.string.settings_theme_mode_system),
                     listOf(ColorMode.LIGHT) to stringResource(R.string.settings_theme_mode_light),
@@ -238,7 +249,7 @@ fun ColorPaletteScreenMaterial(
                 }
             }
 
-            item {
+            if (!masculine) item {
                 SegmentedColumn(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     content = listOf(

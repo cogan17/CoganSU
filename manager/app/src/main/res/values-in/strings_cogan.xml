@@ -13,4 +13,6 @@
     <string name="cogan_link_telegram_title">Komunitas Telegram</string>
     <string name="cogan_link_telegram_summary">Kabar, rilis dan bantuan</string>
     <string name="cogan_based_on">Berbasis KernelSU karya weishu dan para kontributornya (GPL-3.0)</string>
+    <string name="cogan_style_masculine">Maskulin</string>
+    <string name="cogan_style_masculine_summary">Latar hitam, kartu abu arang, dan aksen biru baja. Pilih Material atau Miuix untuk mengatur warna.</string>
 </resources>

@@ -37,7 +37,15 @@ class HomeViewModel(
     fun refresh() {
         viewModelScope.launch {
             val baseState = withContext(Dispatchers.IO) {
-                buildState().copy(coganKernel = Cogan.readKernelInfo())
+                // CoganSU: use the same real release for both home cards; never change disguise.
+                val kernel = Cogan.readKernelInfo()
+                val state = buildState()
+                state.copy(
+                    coganKernel = kernel,
+                    systemInfo = state.systemInfo.copy(
+                        kernelVersion = kernel.displayRelease(state.systemInfo.kernelVersion),
+                    ),
+                )
             }
             _uiState.update { baseState }
             if (baseState.checkUpdateEnabled) {

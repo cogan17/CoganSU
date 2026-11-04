@@ -9,6 +9,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowInsetsControllerCompat
+import me.weishu.kernelsu.cogan.CoganDarkColors
+import me.weishu.kernelsu.cogan.CoganTypography
 import me.weishu.kernelsu.ui.webui.MonetColorsProvider
 
 @Composable
@@ -22,7 +24,8 @@ fun MaterialKernelSUTheme(
     val amoledMode = appSettings.colorMode.isAmoled
     val dynamicColor = appSettings.keyColor == 0
 
-    val colorScheme = rememberKernelSUColorScheme(
+    // CoganSU: charcoal surfaces and steel-blue accents in the Masculine preset.
+    val colorScheme = if (appSettings.masculine) CoganDarkColors else rememberKernelSUColorScheme(
         seedColor = if (dynamicColor) Color.Unspecified else Color(appSettings.keyColor),
         isDark = darkTheme,
         isAmoled = amoledMode,
@@ -43,7 +46,7 @@ fun MaterialKernelSUTheme(
     MaterialExpressiveTheme(
         colorScheme = animatedColorScheme,
         motionScheme = MotionScheme.expressive(),
-        typography = Typography,
+        typography = if (appSettings.masculine) CoganTypography else Typography,
         content = {
             MonetColorsProvider.UpdateCss(colorScheme)
             content()
