@@ -1,6 +1,5 @@
 .idea
 .vscode
-CLAUDE.md
 AGENTS.md
 .DS_Store
 /target
@@ -9,3 +8,8 @@ __pycache__
 /dist
 /repack-config.json
 /userspace/ksud/.lkm_image_bootstrap.o
+
+# CoganSU: the release key never goes into the repository (docs/kunci.md)
+*.jks
+*.keystore
+cogansu.jks.txt
