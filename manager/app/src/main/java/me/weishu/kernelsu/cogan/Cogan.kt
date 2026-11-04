@@ -45,9 +45,10 @@ object Cogan {
             val script = BRIDGE_FILES.joinToString("; ") { name ->
                 "printf '%s=' $name; head -n 1 $BRIDGE_DIR/$name 2>/dev/null; echo"
             }
-            ShellUtils.fastCmd(shell, script)
+            // Every line: ShellUtils.fastCmd keeps only the last one, which left the card "not Cogan Kernel".
+            shell.newJob().add(script).to(ArrayList<String>()).exec().out
         }.getOrNull()
-            ?.lineSequence()
+            ?.asSequence()
             ?.mapNotNull { line ->
                 val index = line.indexOf('=')
                 if (index <= 0) null else line.substring(0, index) to line.substring(index + 1).trim()
