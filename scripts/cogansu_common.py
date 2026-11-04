@@ -12,7 +12,8 @@ KERNEL_REPO = "cogan17/Cogan-Kernel"
 SUSFS_PROJECT = "simonpunk%2Fsusfs4ksu"
 SUSFS_BRANCH = "gki-android14-6.1"
 SUSFS_KSU_PATCH = "kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch"
-RELEASE_TAG = re.compile(r"^cogansu-(\d+)$")
+# Release tags, like Cogan Kernel: v<YY.MM.DD>-r<Build Revision> (UTC date of the build).
+RELEASE_TAG = re.compile(r"^v\d{2}\.\d{2}\.\d{2}-r\d+$")
 
 # Which part of KernelSU a commit touches, by path (most specific first).
 AREAS = (

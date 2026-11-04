@@ -50,9 +50,9 @@ CoganSU adalah root manager versi sendiri untuk **Xiaomi 14T Pro (rothko)**, dib
 ### Membangun
 
 1. Sekali saja: buat kunci rilis dan simpan sebagai secret repo, lihat **[docs/kunci.md](docs/kunci.md)**.
-2. Jalankan workflow **Build CoganSU** (tab *Actions*). Hasilnya artifact `CoganSU_…-release.apk` (APK apa adanya) dan `build-info`; ringkasan run menampilkan ukuran dan hash sertifikat.
+2. Jalankan workflow **Build CoganSU** (tab *Actions*) dengan *Release Type* `CI`. Hasilnya artifact `CoganSU_…-release.apk` (APK apa adanya) dan `build-info`; ringkasan run menampilkan ukuran dan hash sertifikat.
 3. Run pertama: isi `kernel/cogansu.mk` dengan nilai itu (`python3 scripts/cogansu_cert.py write <ukuran> <hash>`), commit, lalu build lagi.
-4. Terbitkan lewat workflow **Rilis dari run** dengan `run_id` run Build CoganSU yang hijau dari `main` (hanya bila `kernel/cogansu.mk` sudah cocok). Pilih *Release* agar dibaca cek pembaruan di aplikasi; *teks_saja* hanya membuat catatan dan teks Telegram.
+4. Terbitkan, seperti Cogan Kernel: langsung dari form Build CoganSU (*Release Type* `Pre-Release`/`Release`, *Build Revision* `rN` → rilis `vYY.MM.DD-rN`; kosong = nomor run), atau belakangan lewat **Rilis dari run** dengan `run_id` run yang hijau dari `main` (centang *timpa* bila tag yang sama sudah ada). Hanya bila `kernel/cogansu.mk` sudah cocok. Pilih *Release* agar dibaca cek pembaruan di aplikasi; *teks_saja* hanya membuat catatan dan teks Telegram.
 5. Bangun Cogan Kernel dari commit CoganSU yang sama, lihat **[docs/integrasi-cogan-kernel.md](docs/integrasi-cogan-kernel.md)**.
 
 Workflow **Cek pembaruan** hanya mengecek: KernelSU terbaru (commit yang belum digabung), apakah patch SUSFS masih cocok (sekarang dan bila KernelSU terbaru digabung), rilis CoganSU terakhir, build terakhir, dan Cogan Bridge di Cogan Kernel.

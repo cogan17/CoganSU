@@ -17,8 +17,8 @@ import cogansu_cert  # noqa: E402
 from cogansu_common import RELEASE_TAG, area_counts, commits, gh, git, read_env, trailer  # noqa: E402
 
 PACKAGE = "com.cogan.su"
-REQUIRED = ("VERSION", "CODE", "COMMIT", "PACKAGE", "APK", "APK_SHA256", "CERT_SIZE", "CERT_HASH",
-            "CERT_STATE", "UPSTREAM_COMMIT")
+REQUIRED = ("RELEASE", "RELEASE_NAME", "VERSION", "CODE", "COMMIT", "PACKAGE", "APK", "APK_SHA256",
+            "CERT_SIZE", "CERT_HASH", "CERT_STATE", "UPSTREAM_COMMIT")
 
 WORDS = {
     "id": {
@@ -72,6 +72,8 @@ def validate(info, files, sha):
         fail(f"paket {env['PACKAGE']} bukan / not {PACKAGE}")
     if env["CERT_STATE"] != "match":
         fail("kernel/cogansu.mk belum cocok dengan kunci rilis di run itu / did not match the release key in that run")
+    if not RELEASE_TAG.match(env["RELEASE"]):
+        fail(f"tag rilis / release tag {env['RELEASE']!r} bukan / is not vYY.MM.DD-rN")
     if not env["CODE"].isdigit():
         fail(f"kode versi / version code: {env['CODE']!r}")
     apks = sorted(path.name for path in files.iterdir() if path.is_file())
@@ -89,16 +91,14 @@ def validate(info, files, sha):
     return env
 
 
-def previous_release(repo, code, api):
+def previous_release(repo, tag, api):
+    """The newest published CoganSU release other than tag (the API lists newest first)."""
     releases = api(f"repos/{repo}/releases?per_page=100")
-    best = None
     for release in releases if isinstance(releases, list) else []:
-        match = RELEASE_TAG.match(release.get("tag_name", ""))
-        if release.get("draft") or not match or int(match.group(1)) >= code:
-            continue
-        if best is None or int(match.group(1)) > int(RELEASE_TAG.match(best["tag_name"]).group(1)):
-            best = release
-    return best
+        name = release.get("tag_name", "")
+        if not release.get("draft") and RELEASE_TAG.match(name) and name != tag:
+            return release
+    return None
 
 
 def changes(prev_tag, sha, upstream_ref):
@@ -144,7 +144,7 @@ def base_version(version):
 def notes(env, lang, prev, diff, run_url, tested, note):
     w = WORDS[lang]
     flag = "🇮🇩" if lang == "id" else "🇬🇧"
-    lines = [f"## {flag} CoganSU {env['VERSION']} ({env['CODE']})", "", w["about"], "", f"> {w['pair']}", "",
+    lines = [f"## {flag} {env['RELEASE_NAME']}", "", w["about"], "", f"> {w['pair']}", "",
              "| | |", "|---|---|",
              f"| {w['version']} | `{env['VERSION']}` ({env['CODE']}) |",
              f"| {w['base']} | [`{env['UPSTREAM_COMMIT'][:12]}`](https://github.com/tiann/KernelSU/commit/{env['UPSTREAM_COMMIT']}) |",
@@ -170,7 +170,7 @@ def notes(env, lang, prev, diff, run_url, tested, note):
 def telegram_post(env, lang, prev, diff, link, tested, note):
     w = WORDS[lang]
     lines = ["🛡️ CoganSU · Xiaomi 14T Pro (rothko)",
-             f"📦 CoganSU {env['CODE']} · KernelSU {base_version(env['VERSION'])}", ""]
+             f"📦 {env['RELEASE']} · CoganSU {env['CODE']} · KernelSU {base_version(env['VERSION'])}", ""]
     if prev is None:
         items = [w["first_tg"]]
     elif diff is None:
@@ -201,9 +201,8 @@ def summary(posts):
 def prepare(info, files, repo, run_url, sha, tested=False, note="", note_en="", telegram=None,
             text_only=False, upstream_ref="upstream/main", api=gh):
     env = validate(info, files, sha)
-    code = int(env["CODE"])
-    tag = f"cogansu-{code}"
-    prev = previous_release(repo, code, api)
+    tag = env["RELEASE"]
+    prev = previous_release(repo, tag, api)
     diff = changes(prev["tag_name"], sha, upstream_ref) if prev else None
     link = f"https://github.com/{repo}/releases/tag/{tag}"
     if text_only:
@@ -216,11 +215,11 @@ def prepare(info, files, repo, run_url, sha, tested=False, note="", note_en="", 
                  for lang in ("id", "en")}
         for lang, text in posts.items():
             (telegram / f"{lang}.txt").write_text(text, encoding="utf-8")
-        (telegram / "summary.md").write_text(f"**CoganSU {env['VERSION']} ({code})**\n\n" + summary(posts),
+        (telegram / "summary.md").write_text(f"**{env['RELEASE_NAME']} · {env['VERSION']} ({env['CODE']})**\n\n" + summary(posts),
                                              encoding="utf-8")
     text = notes(env, "id", prev, diff, run_url, tested, note) + "\n" + \
         notes(env, "en", prev, diff, run_url, tested, note_en)
-    metadata = {"RELEASE": tag, "RELEASE_NAME": f"CoganSU {env['VERSION']} ({code})"}
+    metadata = {"RELEASE": tag, "RELEASE_NAME": env["RELEASE_NAME"]}
     return metadata, text
 
 

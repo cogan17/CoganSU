@@ -84,12 +84,8 @@ def susfs_state(upstream_ref):
 def cogansu_state(repo, api):
     size, digest = cogansu_cert.read_mk()
     releases = api(f"repos/{repo}/releases?per_page=100")
-    newest = None
-    for release in releases if isinstance(releases, list) else []:
-        match = RELEASE_TAG.match(release.get("tag_name", ""))
-        if match and not release.get("draft") and (
-                newest is None or int(match.group(1)) > int(RELEASE_TAG.match(newest["tag_name"]).group(1))):
-            newest = release
+    newest = next((release for release in (releases if isinstance(releases, list) else [])
+                   if not release.get("draft") and RELEASE_TAG.match(release.get("tag_name", ""))), None)
     since = None
     if newest:
         tagged = git("rev-parse", "-q", "--verify", f"{newest['tag_name']}^{{commit}}", check=False)

@@ -1,13 +1,29 @@
 # Build CoganSU: ksud (arm64) and the CoganSU manager APK, signed with the CoganSU release key.
-# Manual only (owner: save Actions runs). It never publishes: a green run of main is released with
-# "Rilis dari run" (like Cogan Kernel). Artifacts: the APK as it is (unarchived) and build-info (build.env).
+# Manual only (owner: save Actions runs). Form like Cogan Kernel's Builder (owner 2026-11-04):
+# Release Type CI = artifacts only; Pre-Release/Release publish this run at the end (only from main and
+# with kernel/cogansu.mk matching). Build Revision rN names the release vYY.MM.DD-rN (UTC date), empty =
+# the run number. An existing tag is never replaced here: use a new Build Revision, or "timpa" in
+# Rilis dari run. Artifacts: the APK as it is (unarchived) and build-info (build.env).
 #
 # Membangun CoganSU: ksud (arm64) dan APK manager CoganSU, ditandatangani kunci rilis CoganSU.
-# Hanya manual dan tidak menerbitkan apa pun; run hijau dari main dirilis lewat "Rilis dari run".
+# Release Type CI = artifact saja; Pre-Release/Release langsung terbit. Build Revision rN = nama rilis.
 name: Build CoganSU
 
 on:
   workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Release Type (CI = artifact saja / only)"
+        type: choice
+        default: "CI"
+        options:
+          - "CI"
+          - "Pre-Release"
+          - "Release"
+      build_revision:
+        description: "Build Revision: r10 · kosong / empty = nomor run / run number"
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -24,6 +40,19 @@ jobs:
     name: ksud (arm64)
     runs-on: ubuntu-latest
     steps:
+      - name: Periksa isian / check the form
+        env:
+          RELEASE_TYPE: ${{ inputs.release_type }}
+          REVISION: ${{ inputs.build_revision }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          [[ -z "$REVISION" || "$REVISION" =~ ^r[0-9]+$ ]] || { echo "::error::Build Revision: r + angka, mis. r10 / r followed by digits"; exit 1; }
+          if [ "$RELEASE_TYPE" != "CI" ]; then
+            [ "$GITHUB_REF_NAME" = "$DEFAULT_BRANCH" ] \
+              || { echo "::error::$RELEASE_TYPE hanya dari / only from $DEFAULT_BRANCH"; exit 1; }
+          fi
+
       - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
@@ -66,6 +95,8 @@ jobs:
     name: CoganSU manager
     needs: ksud
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TYPE: ${{ inputs.release_type }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -122,6 +153,10 @@ jobs:
             echo "::error::Signing certificate does not match kernel/cogansu.mk"
             exit 1
           fi
+          if [ "$RELEASE_TYPE" != "CI" ] && [ "$state" != match ]; then
+            echo "::error::$RELEASE_TYPE: kernel/cogansu.mk belum diisi; build CI dulu / not filled in yet; build CI first"
+            exit 1
+          fi
 
       - name: Setup Java
         uses: actions/setup-java@v6
@@ -164,7 +199,9 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Build info
+        id: info
         env:
+          REVISION: ${{ inputs.build_revision }}
           STATE: ${{ steps.cert.outputs.state }}
           SIZE: ${{ steps.key.outputs.size }}
           HASH: ${{ steps.key.outputs.hash }}
@@ -172,8 +209,14 @@ jobs:
           VERSION: ${{ steps.apk.outputs.version }}
           CODE: ${{ steps.apk.outputs.code }}
         run: |
+          set -euo pipefail
+          revision="${REVISION:-r$GITHUB_RUN_NUMBER}"
+          release="v$(date -u +%y.%m.%d)-$revision"
+          echo "release=$release" >> "$GITHUB_OUTPUT"
           mkdir -p build-info
           {
+            echo "RELEASE=$release"
+            echo "RELEASE_NAME=CoganSU $release"
             echo "VERSION=$VERSION"
             echo "CODE=$CODE"
             echo "COMMIT=$GITHUB_SHA"
@@ -208,6 +251,7 @@ jobs:
           NAME: ${{ steps.apk.outputs.name }}
           VERSION: ${{ steps.apk.outputs.version }}
           CODE: ${{ steps.apk.outputs.code }}
+          RELEASE: ${{ steps.info.outputs.release }}
         run: |
           case "$STATE" in
             match) kid="✅ cocok dengan \`kernel/cogansu.mk\`"; ken="✅ matches \`kernel/cogansu.mk\`" ;;
@@ -215,21 +259,86 @@ jobs:
                ken="⚠️ \`kernel/cogansu.mk\` is still empty: store the values above in it, then build again" ;;
           esac
           {
-            echo "## CoganSU $VERSION ($CODE)"
+            echo "## CoganSU $RELEASE · $VERSION ($CODE)"
             echo
             echo "| | Indonesia | English |"
             echo "|---|---|---|"
+            echo "| Rilis / Release | \`$RELEASE\` ($RELEASE_TYPE) | \`$RELEASE\` ($RELEASE_TYPE) |"
             echo "| APK | \`$NAME\` | \`$NAME\` |"
             echo "| Paket / Package | \`com.cogan.su\` | \`com.cogan.su\` |"
             echo "| Commit | \`${GITHUB_SHA::12}\` | \`${GITHUB_SHA::12}\` |"
             echo "| Sertifikat / Certificate | \`$SIZE\` \`$HASH\` | \`$SIZE\` \`$HASH\` |"
             echo "| Kernel | $kid | $ken |"
             echo
-            if [ "$STATE" = match ] && [ "$GITHUB_REF_NAME" = main ]; then
-              echo "- 🇮🇩 Untuk merilis: jalankan **Rilis dari run** dengan run_id \`$GITHUB_RUN_ID\`."
-              echo "- 🇬🇧 To release: run **Rilis dari run** with run_id \`$GITHUB_RUN_ID\`."
+            if [ "$RELEASE_TYPE" != CI ]; then
+              echo "- 🇮🇩 Rilis diterbitkan oleh job *Terbit* di run ini."
+              echo "- 🇬🇧 The release is published by this run's *Terbit* job."
+            elif [ "$STATE" = match ] && [ "$GITHUB_REF_NAME" = main ]; then
+              echo "- 🇮🇩 Untuk merilis nanti: jalankan **Rilis dari run** dengan run_id \`$GITHUB_RUN_ID\`."
+              echo "- 🇬🇧 To release later: run **Rilis dari run** with run_id \`$GITHUB_RUN_ID\`."
             else
               echo "- 🇮🇩 Run ini tidak bisa dirilis (harus dari main dan \`kernel/cogansu.mk\` cocok)."
               echo "- 🇬🇧 This run cannot be released (it must be from main with \`kernel/cogansu.mk\` matching)."
             fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  release:
+    name: Terbit / publish (${{ inputs.release_type }})
+    needs: manager
+    if: ${{ inputs.release_type != 'CI' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TYPE: ${{ inputs.release_type }}
+      UPSTREAM: https://github.com/tiann/KernelSU.git
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: KernelSU main (pembanding / for comparison)
+        run: git fetch --no-tags "$UPSTREAM" '+refs/heads/main:refs/remotes/upstream/main'
+
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          pattern: "CoganSU_*.apk"
+          path: files
+          merge-multiple: true
+          skip-decompress: true
+
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          name: build-info
+          path: info
+
+      - name: Terbitkan rilis / publish the release
+        run: |
+          set -euo pipefail
+          tag="$(sed -n 's/^RELEASE=//p' info/build.env)"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::Rilis $tag sudah ada; tidak ditimpa di sini. Pakai Build Revision baru, atau Rilis dari run dengan timpa / release $tag exists; use a new Build Revision, or Rilis dari run with timpa"
+            exit 1
+          fi
+          python3 scripts/release_from_run.py info files --repo "$GITHUB_REPOSITORY" --sha "$GITHUB_SHA" \
+            --telegram telegram --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" > notes.md
+          title="$(sed -n 's/^RELEASE_NAME=//p' info/release.env)"
+          (cd files && sha256sum -- * > checksums.txt)
+          mode=(--prerelease); [ "$RELEASE_TYPE" = "Release" ] && mode=(--latest)
+          gh release create "$tag" files/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" "${mode[@]}" \
+            --title "$title" --notes-file notes.md
+          {
+            echo "## Rilis / release: [$tag]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$tag) ($RELEASE_TYPE)"
+            echo
+            echo "## 📣 Telegram · ID/EN"
+            echo
+            cat telegram/summary.md
+            echo
+            echo '<details><summary>📝 Catatan rilis / Release notes</summary>'
+            echo
+            cat notes.md
+            echo
+            echo '</details>'
           } >> "$GITHUB_STEP_SUMMARY"
