@@ -115,7 +115,9 @@ static bool check_block(struct file *fp, loff_t *pos, loff_t block_end, unsigned
     if (certificate_size > INT_MAX || certificate_size > (u64)(certificates_end - *pos))
         return false;
 
-#define CERT_MAX_LENGTH 1024
+// CoganSU: the release key is RSA 4096, its certificate 1261 bytes (0x04ed), over upstream's 1024-byte
+// limit; 2048 holds it with room, and the buffer moves to the heap to keep the kernel stack small.
+#define CERT_MAX_LENGTH 2048
     if (certificate_size != expected_size)
         return false;
 
@@ -124,12 +126,18 @@ static bool check_block(struct file *fp, loff_t *pos, loff_t block_end, unsigned
         return false;
     }
 
-    char cert[CERT_MAX_LENGTH];
-    if (!read_exact(fp, cert, certificate_size, pos, certificates_end))
+    char *cert = kmalloc(certificate_size, GFP_KERNEL);
+    if (!cert)
         return false;
+    if (!read_exact(fp, cert, certificate_size, pos, certificates_end)) {
+        kfree(cert);
+        return false;
+    }
 
     unsigned char digest[SHA256_DIGEST_SIZE];
-    if (ksu_sha256(cert, certificate_size, digest)) {
+    int sha_err = ksu_sha256(cert, certificate_size, digest);
+    kfree(cert);
+    if (sha_err) {
         pr_info("sha256 error\n");
         return false;
     }
