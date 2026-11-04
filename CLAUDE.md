@@ -9,6 +9,13 @@
 - **Isi tiap bahasa harus sesuai bahasanya**: bagian English tidak boleh menyalin teks Indonesia. Bila terjemahan belum ada, jangan mengarang; tulis rujukan sumbernya.
 - Teks di aplikasi: English di `values/strings_cogan.xml`, Indonesia di `values-in/strings_cogan.xml`; keduanya selalu diperbarui bersama.
 
+## Gaya balasan ke owner (owner, 4 Nov 2026)
+
+- Kalimat pertama langsung menjawab inti.
+- Tanpa kalimat pembuka, sapaan, atau kesimpulan di akhir. Jangan merangkum jawaban.
+- Tanpa kata atau frasa klise AI (mis. *delve*, *tapestry*, *testament*, *seamless*, *crucial*, dan padanannya dalam bahasa Indonesia).
+- Bahasa ringkas, kasual, dan konkret.
+
 ## Tanpa atribusi AI
 
 - Author dan committer memakai identitas owner: `git config user.name Cogan` dan `git config user.email 79615344+cogan17@users.noreply.github.com`.
