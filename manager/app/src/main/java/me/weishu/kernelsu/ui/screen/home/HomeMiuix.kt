@@ -191,7 +191,8 @@ fun HomePagerMiuix(
                             modifier = Modifier.fillMaxWidth(),
                         )
                         InfoCard(
-                            systemInfo = state.systemInfo,
+                            // CoganSU: display the real bridge release in both home layouts.
+                            systemInfo = state.systemInfo.copy(kernelVersion = state.displayedKernelVersion),
                             modifier = Modifier.fillMaxWidth(),
                         )
                         SupportLinks(

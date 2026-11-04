@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import me.weishu.kernelsu.KernelVersion
 import me.weishu.kernelsu.cogan.Cogan
 import me.weishu.kernelsu.cogan.CoganKernelInfo
+import me.weishu.kernelsu.cogan.CoganKernelState
 import me.weishu.kernelsu.ui.util.module.LatestVersionInfo
 
 @Immutable
@@ -30,6 +31,12 @@ data class HomeUiState(
     val isSupportedDevice: Boolean = Cogan.isSupportedDevice(),
     val coganKernel: CoganKernelInfo = CoganKernelInfo.Unknown,
 ) {
+    // CoganSU: prefer the root-only bridge; uname may be disguised by SUSFS.
+    val displayedKernelVersion: String
+        get() = coganKernel.release.takeIf {
+            coganKernel.state == CoganKernelState.Detected && it.isNotBlank()
+        } ?: systemInfo.kernelVersion
+
     val isSELinuxPermissive: Boolean
         get() = systemInfo.selinuxStatus == "Permissive"
 

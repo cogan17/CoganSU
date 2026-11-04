@@ -3,13 +3,18 @@
 
     <style name="Theme.KernelSU" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <!-- CoganSU: keep the launch window dark before Compose draws. -->
+        <item name="android:windowBackground">@android:color/black</item>
     </style>
 
     <style name="Theme.KernelSU.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@android:color/background_dark</item>
+        <item name="windowSplashScreenBackground">@android:color/black</item>
         <item name="windowSplashScreenIconBackgroundColor">@color/ic_splash_background</item>
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_cogan</item>
-        <item name="windowSplashScreenAnimationDuration">500</item>
+        <!-- CoganSU: a static logo needs no artificial animation delay. -->
+        <item name="windowSplashScreenAnimationDuration">0</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
         <item name="postSplashScreenTheme">@style/Theme.KernelSU</item>
     </style>
 

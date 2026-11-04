@@ -49,6 +49,7 @@ data class AppSettings(
     val keyColor: Int,
     val paletteStyle: PaletteStyle,
     val colorSpec: ColorSpec.SpecVersion,
+    val coganMasculine: Boolean = false, // CoganSU
 )
 
 val PaletteStyle.supportsSpec2025: Boolean
@@ -67,6 +68,17 @@ fun ColorSpec.SpecVersion.effectiveFor(style: PaletteStyle): ColorSpec.SpecVersi
 object ThemeController {
     fun getAppSettings(repo: SettingsRepository = SettingsRepositoryImpl()): AppSettings {
         val uiMode = repo.uiMode
+        // CoganSU: fixed AMOLED preset, independent of system/wallpaper colors.
+        // Saved Material/Miuix palette preferences remain available when switching back.
+        if (uiMode == UiMode.COGAN_VALUE) {
+            return AppSettings(
+                ColorMode.DARK_AMOLED,
+                0xFF90CAF9.toInt(),
+                PaletteStyle.TonalSpot,
+                ColorSpec.SpecVersion.SPEC_2025,
+                coganMasculine = true,
+            )
+        }
         var colorModeValue = repo.themeMode
 
         if (uiMode == "miuix") {

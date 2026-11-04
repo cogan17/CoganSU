@@ -152,7 +152,8 @@ fun HomePagerMaterial(
                 actions = actions,
             )
             CoganKernelCard(info = state.coganKernel, onOpenUrl = actions.onOpenUrl)
-            InfoCard(systemInfo = state.systemInfo)
+            // CoganSU: display the real bridge release in both home layouts.
+            InfoCard(systemInfo = state.systemInfo.copy(kernelVersion = state.displayedKernelVersion))
             SupportLinks(onOpenUrl = actions.onOpenUrl)
             Spacer(
                 Modifier.height(

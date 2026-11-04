@@ -128,8 +128,9 @@ fun SettingPagerMaterial(
                             icon = Icons.Filled.DisplaySettings,
                             title = stringResource(id = R.string.settings_ui_mode),
                             summary = stringResource(id = R.string.settings_ui_mode_summary),
-                            items = UiMode.entries.map { it.name },
-                            selectedIndex = if (uiState.uiMode == UiMode.Material.value) 1 else 0,
+                            // CoganSU: keep existing styles and add the dark Cogan preset.
+                            items = listOf("Miuix", "Material", stringResource(R.string.cogan_style_masculine)),
+                            selectedIndex = UiMode.styleValues.indexOf(uiState.uiMode).coerceAtLeast(0),
                             onItemSelected = actions.onSetUiModeIndex
                         )
                     }
