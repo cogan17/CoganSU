@@ -1,3 +1,30 @@
+# Checkpoint — 4 Nov 2026, sekitar 22.55 WIB
+
+## Sedang berjalan
+
+Tidak ada pekerjaan atau run yang sedang berjalan. Owner pindah ke sesi TWRP dan OFOX.
+
+## Sudah selesai sejak checkpoint 18.40 WIB
+
+- **#13** (`8add986`) `feat(manager)`: baris Cogan Kernel pindah ke kartu info di bawah Versi manajer (bukan tautan); isinya versi asli dari Cogan Bridge, Versi kernel tetap `uname` (versi samaran SUSFS). Splash tanpa logo dan tanpa jeda 500 ms. Build CoganSU CI [run #8](https://github.com/cogan17/CoganSU/actions/runs/41857680134) hijau; **diuji owner di HP ±22.41 WIB** (`v3.3.1-51-gae06aba8` + Cogan Kernel r38): semua sesuai, logo sudah tidak ada.
+- **#14** (`970116c`) `docs`: README ID/EN sesuai Beranda terbaru dan tabel Status uji.
+- Issue #3 diperbarui (langkah dan catatan).
+- Auto cut charging Cogan Smart (repo Cogan-Kernel): **berfungsi**. `events.tsv`: cas diputus di 95% (19.30 WIB), lanjut di 90% (20.41 WIB). Angka 100% di layar hanya masalah tampilan (dikonfirmasi owner); modul tidak diubah. Batas suhu Kernel Default di HP tersimpan 39 °C (bawaan 41 °C), CPU besar sering ditahan 60%.
+- KernelSU hulu `main`: tidak ada commit baru yang belum digabung (±22.50 WIB).
+
+## Tertunda
+
+- **Owner yang menjalankan workflow** (owner, 4 Nov: "nanti biar saya saja yg run workflow"). Asisten tidak menjalankan workflow tanpa diminta.
+- Rilis Release/Latest CoganSU (supaya terbaca cek pembaruan aplikasi), bila owner meminta.
+- *Opsional, owner:* secret `KEY_ALIAS` `CoganSU` → `cogansu`.
+- **Pembaruan HyperOS `3.0.302.0.WNNIDXM`** (patch keamanan Oktober 2026) sedang diunduh di HP owner (sebelumnya `OS3.0.301.0`). OTA mengganti `boot`, jadi Cogan Kernel dan root hilang sesudah update; perlu flash ulang Cogan Kernel (cek KMI/kecocokan dulu di repo Cogan-Kernel). Keputusan owner.
+
+## Langkah pertama berikutnya
+
+- Baca `CLAUDE.md`, lalu tunggu instruksi owner.
+
+---
+
 # Checkpoint — 4 Nov 2026, sekitar 18.40 WIB
 
 ## Sedang berjalan
