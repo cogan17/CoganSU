@@ -2,7 +2,6 @@ package me.weishu.kernelsu.cogan
 
 import android.os.Build
 import androidx.compose.runtime.Immutable
-import com.topjohnwu.superuser.ShellUtils
 import me.weishu.kernelsu.ui.util.getRootShell
 
 /**
