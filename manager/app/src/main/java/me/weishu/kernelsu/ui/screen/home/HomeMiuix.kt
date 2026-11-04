@@ -185,13 +185,9 @@ fun HomePagerMiuix(
                             state = state,
                             actions = actions,
                         )
-                        CoganKernelCard(
-                            info = state.coganKernel,
-                            onOpenUrl = actions.onOpenUrl,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
                         InfoCard(
                             systemInfo = state.systemInfo,
+                            coganKernel = state.coganKernel,
                             modifier = Modifier.fillMaxWidth(),
                         )
                         SupportLinks(
@@ -456,32 +452,12 @@ private fun StatusCard(
     }
 }
 
+// CoganSU: the real kernel release from Cogan Bridge; "Kernel version" below stays uname, which SUSFS can spoof.
 @Composable
-private fun CoganKernelCard(
-    info: CoganKernelInfo,
-    onOpenUrl: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val summary = when (info.state) {
-        CoganKernelState.Detected -> "${info.release}\n${info.featureLine}"
-        CoganKernelState.NotCogan -> stringResource(R.string.cogan_kernel_not_detected)
-        CoganKernelState.Unknown -> stringResource(R.string.cogan_kernel_unknown)
-    }
-    Card(modifier = modifier) {
-        ArrowPreference(
-            title = stringResource(R.string.cogan_kernel_title),
-            summary = summary,
-            startAction = {
-                Icon(
-                    imageVector = Icons.Filled.Memory,
-                    contentDescription = stringResource(R.string.cogan_kernel_title),
-                    modifier = Modifier.padding(end = 6.dp),
-                    tint = colorScheme.onBackground,
-                )
-            },
-            onClick = { onOpenUrl(Cogan.KERNEL_RELEASES_URL) },
-        )
-    }
+private fun coganKernelSummary(info: CoganKernelInfo): String = when (info.state) {
+    CoganKernelState.Detected -> "${info.release}\n${info.featureLine}"
+    CoganKernelState.NotCogan -> stringResource(R.string.cogan_kernel_not_detected)
+    CoganKernelState.Unknown -> stringResource(R.string.cogan_kernel_unknown)
 }
 
 // CoganSU: links to Cogan Kernel and its community instead of upstream's support/learn links.
@@ -537,6 +513,7 @@ private fun SupportLinks(
 private fun InfoCard(
     systemInfo: SystemInfo,
     modifier: Modifier = Modifier,
+    coganKernel: CoganKernelInfo = CoganKernelInfo.Unknown,
 ) {
     @Composable
     fun InfoText(
@@ -600,6 +577,11 @@ private fun InfoCard(
                     icon = Icons.Filled.Tag,
                     title = stringResource(R.string.home_manager_version),
                     content = systemInfo.managerVersion,
+                )
+                InfoText(
+                    icon = Icons.Filled.Memory,
+                    title = stringResource(R.string.cogan_kernel_title),
+                    content = coganKernelSummary(coganKernel),
                 )
                 InfoText(
                     icon = Icons.Filled.DeveloperBoard,
