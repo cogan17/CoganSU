@@ -77,6 +77,7 @@ All run from a button in the *Actions* tab only, with no schedule.
 | **Build CoganSU** | Builds `ksud` and the APK signed with the release key, then checks APK certificate = key = `kernel/cogansu.mk`. Form like Cogan Kernel's Builder: **Release Type** `CI` (artifacts only) / `Pre-Release` / `Release` (published right away) and **Build Revision** `rN` (release `vYY.MM.DD-rN`; empty = run number). |
 | **Rilis dari run** | Publishes a green Build CoganSU run of `main` later, after checking SHA256 and the certificate. Release notes and **ready-to-copy Telegram text** (Indonesian and English) are on the Summary page. Tick **diuji di HP** only when the owner has tested it; **timpa** to replace a release with the same tag; **teks_saja** for notes and Telegram text without publishing. |
 | **Cek pembaruan** | Checks only, builds nothing: newest KernelSU (commits not merged yet), whether the SUSFS patch still fits (now and after merging the newest KernelSU), the last CoganSU release and build, Cogan Bridge and the integration in Cogan Kernel. |
+| **Hapus log run lama** | Cleans up the *Actions* tab. Check only by default; type `HAPUS` to delete runs older than **simpan_hari** (default 7) and runs of workflows that no longer exist. A deleted run takes its artifacts with it, so publish the build you want to release first. |
 
 The release key is created once by the owner and kept as repository secrets: **[docs/kunci.en.md](docs/kunci.en.md)**. Technical notes for Cogan Kernel: **[docs/integrasi-cogan-kernel.md](docs/integrasi-cogan-kernel.md)**.
 

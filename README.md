@@ -77,6 +77,7 @@ Semua hanya lewat tombol di tab *Actions*, tanpa jadwal.
 | **Build CoganSU** | Membangun `ksud` dan APK bertanda tangan kunci rilis, lalu mengecek sertifikat APK = kunci = `kernel/cogansu.mk`. Form seperti Builder Cogan Kernel: **Release Type** `CI` (artifact saja) / `Pre-Release` / `Release` (langsung terbit) dan **Build Revision** `rN` (rilis `vYY.MM.DD-rN`; kosong = nomor run). |
 | **Rilis dari run** | Menerbitkan run Build CoganSU yang hijau dari `main` belakangan, setelah cek SHA256 dan sertifikat. Catatan rilis dan **Teks Telegram siap salin** (Indonesia dan English) ada di halaman Summary. Centang **diuji di HP** hanya bila owner sudah mengujinya; **timpa** untuk mengganti rilis dengan tag yang sama; **teks_saja** untuk catatan dan teks Telegram tanpa menerbitkan. |
 | **Cek pembaruan** | Hanya mengecek, tidak membangun: KernelSU terbaru (commit yang belum digabung), apakah patch SUSFS masih cocok (sekarang dan bila KernelSU terbaru digabung), rilis dan build CoganSU terakhir, Cogan Bridge dan integrasi di Cogan Kernel. |
+| **Hapus log run lama** | Bersih-bersih tab *Actions*. Bawaan cek saja; ketik `HAPUS` untuk menghapus run yang lebih tua dari **simpan_hari** (bawaan 7) dan run workflow yang sudah tidak ada. Artifact run yang dihapus ikut hilang, jadi terbitkan dulu build yang mau dirilis. |
 
 Kunci rilis dibuat sekali oleh owner dan disimpan sebagai secret repo: **[docs/kunci.md](docs/kunci.md)**. Catatan teknis untuk Cogan Kernel: **[docs/integrasi-cogan-kernel.md](docs/integrasi-cogan-kernel.md)**.
 
