@@ -1,11 +1,12 @@
 name: Hapus branch
 
 # One-off (owner, 5 Nov 2026: "gunakan workflow sekali jalan"): deletes work branches whose PR is
-# already merged. Removed again from main after it has run. A branch is only deleted when it has no
-# open PR and its current head is exactly the head of a merged PR, so no unmerged work is lost.
+# done (merged, or closed by the owner: "PR hapus saja"). Removed again from main after it has run.
+# A branch is only deleted when it has no open PR and its current head is exactly the head of a
+# merged or closed PR; GitHub keeps those commits under the PR (refs/pull/N/head).
 #
-# Sekali jalan: hapus branch kerja yang PR-nya sudah digabung. Branch dengan PR terbuka atau commit
-# yang belum digabung tidak disentuh.
+# Sekali jalan: hapus branch kerja yang PR-nya sudah selesai (digabung atau ditutup). Branch dengan
+# PR terbuka atau commit yang tidak ada di PR mana pun tidak disentuh.
 
 on:
   workflow_dispatch:
@@ -13,7 +14,7 @@ on:
       branches:
         description: "Branch, pisah spasi / space separated"
         type: string
-        default: "ccr-344ab142-dnm7nc docs/checkpoint-4nov-malam fix/batas-sertifikat fix/kartu-cogan-kernel"
+        default: "ccr-344ab142-dnm7nc docs/checkpoint-4nov-malam fix/batas-sertifikat fix/kartu-cogan-kernel feat/tampilan-maskulin fix/tampilan-cogan claude/cogan-kernel-root-manager-jy0o2p"
       dry_run:
         description: "Cek saja, tanpa menghapus / check only"
         type: boolean
@@ -55,8 +56,8 @@ jobs:
             elif [ -n "$(gh api "repos/$REPO/pulls?state=open&head=$owner:$b" --jq '.[].number')" ]; then
               note="❌ masih ada PR terbuka, tidak dihapus / open PR, kept"
             elif [ -z "$(gh api --paginate "repos/$REPO/pulls?state=closed&head=$owner:$b" \
-                --jq ".[] | select(.merged_at != null and .head.sha == \"$sha\") | .number")" ]; then
-              note="❌ commit terakhir belum digabung, tidak dihapus / head not merged, kept"
+                --jq ".[] | select(.head.sha == \"$sha\") | .number")" ]; then
+              note="❌ commit terakhir tidak ada di PR mana pun, tidak dihapus / head not in any closed PR, kept"
             elif [ "$DRY_RUN" = true ]; then
               note="🔎 akan dihapus / would be deleted (\`${sha:0:7}\`)"
             elif gh api -X DELETE "repos/$REPO/git/refs/heads/$b" > /dev/null; then
