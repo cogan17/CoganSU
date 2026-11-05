@@ -376,7 +376,7 @@ private fun WarningCard(
 // CoganSU: the real kernel release from Cogan Bridge; "Kernel version" below stays uname, which SUSFS can spoof.
 @Composable
 private fun coganKernelSummary(info: CoganKernelInfo): String = when (info.state) {
-    CoganKernelState.Detected -> "${info.release}\n${info.featureLine}"
+    CoganKernelState.Detected -> listOf(info.release, info.build).filter { it.isNotEmpty() }.joinToString("\n")
     CoganKernelState.NotCogan -> stringResource(R.string.cogan_kernel_not_detected)
     CoganKernelState.Unknown -> stringResource(R.string.cogan_kernel_unknown)
 }

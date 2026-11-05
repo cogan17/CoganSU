@@ -26,7 +26,7 @@ Follow [Install the Kernel](https://github.com/cogan17/Cogan-Kernel/blob/main/do
 Open CoganSU and check Home:
 
 - A green **Working** card in **GKI** mode.
-- A **Cogan Kernel** card: kernel version and feature line, e.g. `SUSFS · NoMount · BBG`.
+- A **Cogan Kernel** row (under Manager version): the real kernel version and build time, e.g. `#1 SMP PREEMPT Tue Nov  4 10:12:34 UTC 2026`.
 - No red *"CoganSU is made only for Xiaomi 14T Pro"* card.
 
 ## Back to another root manager
