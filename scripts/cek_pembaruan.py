@@ -27,7 +27,7 @@ from cogansu_common import (KERNEL_REPO, RELEASE_TAG, SUSFS_BRANCH, SUSFS_KSU_PA
 
 ROOT = Path(__file__).resolve().parent.parent
 BRIDGE_ABI = "1"
-BRIDGE_FEATURES = ("susfs", "nomount", "bbg")  # what manager/.../cogan/Cogan.kt reads
+BRIDGE_FILES = ("abi", "release", "banner", "device", "soc")  # what manager/.../cogan/Cogan.kt reads
 
 
 def ok(flag, lang):
@@ -104,7 +104,7 @@ def bridge_state(api):
     source = api(f"repos/{KERNEL_REPO}/contents/kernel/patches/cogan_bridge.c")
     build = api(f"repos/{KERNEL_REPO}/contents/kernel/build.sh")
     release = api(f"repos/{KERNEL_REPO}/releases/latest") or {}
-    state = {"abi": None, "features": None, "integrated": None,
+    state = {"abi": None, "features": None, "files": None, "integrated": None,
              "release": release.get("tag_name", ""), "release_date": release.get("published_at", "")}
     if isinstance(source, dict) and source.get("content"):
         text = base64.b64decode(source["content"]).decode("utf-8", "replace")
@@ -112,6 +112,7 @@ def bridge_state(api):
         features = re.search(r"features_show\([^)]*\)\s*\{[^}]*sysfs_emit\(buf,\s*\"([^\"]*)\"", text)
         state["abi"] = abi.group(1) if abi else ""
         state["features"] = re.findall(r"(\w+)=%d", features.group(1)) if features else []
+        state["files"] = re.findall(r"__ATTR\((\w+),", text)
     if isinstance(build, dict) and build.get("content"):
         state["integrated"] = "cogan17/CoganSU" in base64.b64decode(build["content"]).decode("utf-8", "replace")
     return state
@@ -195,7 +196,7 @@ def report(lang, up, susfs, csu, bridge):
     if bridge["abi"] is None:
         bridge_text = t["unknown"]
     else:
-        fits = bridge["abi"] == BRIDGE_ABI and all(key in (bridge["features"] or []) for key in BRIDGE_FEATURES)
+        fits = bridge["abi"] == BRIDGE_ABI and all(name in (bridge["files"] or []) for name in BRIDGE_FILES)
         bridge_text = (t["bridge_ok"] if fits else t["bridge_bad"]).format(
             abi=bridge["abi"] or "?", features=", ".join(bridge["features"] or []) or "?")
     integrated = t["unknown"] if bridge["integrated"] is None else ok(bridge["integrated"], lang)

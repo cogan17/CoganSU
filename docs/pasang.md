@@ -26,7 +26,7 @@ Ikuti [Pasang Kernel](https://github.com/cogan17/Cogan-Kernel/blob/main/docs/pas
 Buka CoganSU, lalu cek Beranda:
 
 - Kartu hijau **Berfungsi** dengan mode **GKI**.
-- Kartu **Cogan Kernel**: versi kernel dan baris fitur, mis. `SUSFS · NoMount · BBG`.
+- Baris **Cogan Kernel** (di bawah Versi manajer): versi kernel asli dan waktu build, mis. `#1 SMP PREEMPT Tue Nov  4 10:12:34 UTC 2026`.
 - Tidak ada kartu merah *"CoganSU hanya untuk Xiaomi 14T Pro"*.
 
 ## Kembali ke root manager lain

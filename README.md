@@ -47,7 +47,7 @@
 
 - ✅ Root manager **KernelSU** (tiann) dengan identitas sendiri: nama **CoganSU**, paket `com.cogan.su`, ditandatangani kunci rilis CoganSU
 - ✅ Khusus **Xiaomi 14T Pro (`rothko`)**: HP lain diberi peringatan merah di Beranda (dicek dari kode perangkat, bukan dari nama kernel yang bisa disamarkan)
-- ✅ Baris **Cogan Kernel** di Beranda, tepat di bawah Versi manajer: versi kernel asli dan fitur **SUSFS · NoMount · BBG**, dibaca dari **Cogan Bridge** (`/sys/kernel/cogan`). **Versi kernel** di bawahnya tetap `uname`, jadi menampilkan versi samaran bila SUSFS menyamarkannya
+- ✅ Baris **Cogan Kernel** di Beranda, tepat di bawah Versi manajer: versi kernel asli dan waktu build kernel, dibaca dari **Cogan Bridge** (`/sys/kernel/cogan`). **Versi kernel** di bawahnya tetap `uname`, jadi menampilkan versi samaran bila SUSFS menyamarkannya
 - ✅ Langsung masuk ke Beranda saat dibuka, tanpa logo pembuka
 - ✅ Tanpa peringatan "mode GKI hanya untuk pengujian": Cogan Kernel memang membangun root ke dalam kernel
 - ✅ Tautan Unduh Cogan Kernel, Panduan pasang dan Komunitas Telegram di Beranda; cek pembaruan membaca rilis CoganSU
@@ -102,7 +102,7 @@ Riwayat commit KernelSU disimpan apa adanya; perubahan CoganSU ada di atasnya, s
 
 | Build | Hasil |
 |---|---|
-| [`v26.11.04-r3`](https://github.com/cogan17/CoganSU/releases/tag/v26.11.04-r3) (Pre-Release) + Cogan Kernel r38 | ✅ Diuji owner di HP 4 Nov 2026 ±18.37 WIB: **Berfungsi**, kartu Cogan Kernel · SUSFS · NoMount · BBG |
+| [`v26.11.04-r3`](https://github.com/cogan17/CoganSU/releases/tag/v26.11.04-r3) (Release) + Cogan Kernel r38 | ✅ Diuji owner di HP 4 Nov 2026 ±18.37 WIB: **Berfungsi**, kartu Cogan Kernel · SUSFS · NoMount · BBG |
 | `main` `v3.3.1-51-gae06aba8` (build CI, belum dirilis) + Cogan Kernel r38 | ✅ Diuji owner di HP 4 Nov 2026 ±22.41 WIB: Cogan Kernel di bawah Versi manajer dengan versi asli, Versi kernel menampilkan versi samaran SUSFS, tanpa logo pembuka |
 
 </details>
