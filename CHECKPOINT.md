@@ -1,3 +1,29 @@
+# Checkpoint — 6 Nov 2026
+
+## Sedang berjalan
+
+Tidak ada pekerjaan atau run yang sedang berjalan.
+
+## Sudah selesai sejak checkpoint 4 Nov 22.55 WIB
+
+- **#16, #17** `ci`: workflow sekali jalan *Hapus branch* untuk PR yang sudah digabung atau ditutup (run #1 hijau, 5 Nov 08.21 WIB).
+- **#18** (`e450fd2`) `feat(manager)`: baris Cogan Kernel menampilkan waktu build, tanpa baris fitur.
+- **#19** (`69466a9`) `ci`: workflow *Hapus log run lama* seperti Cogan Kernel.
+- Rilis CoganSU: `v26.11.05-r4` (`513cad2`, 5 Nov 08.21 WIB) dan **`v26.11.05-r5`** (`e450fd2`, Build #12, 5 Nov 09.15 WIB) terbit sebagai **Release**; `v26.11.04-r3` kini juga Release (bukan Pre-Release). Cek pembaruan aplikasi membaca r5 sebagai Latest.
+- **Cogan Kernel [`v26.11.05-r12`](https://github.com/cogan17/Cogan-Kernel/releases/tag/v26.11.05-r12)** (Release, 5 Nov 09.58 WIB, **diuji di HP**): varian **CoganSU** untuk 6.1.138–6.1.176 dengan manager `2-MANAGER_CoganSU_v26.11.05-r5.apk`, berdampingan dengan KernelSU dan KernelSU Next. CoganSU kini root manager yang dirilis, bukan lagi build uji.
+
+## Tertunda
+
+- **Owner yang menjalankan workflow** (owner, 4 Nov: "nanti biar saya saja yg run workflow"). Asisten tidak menjalankan workflow tanpa diminta.
+- *Opsional, owner:* secret `KEY_ALIAS` `CoganSU` → `cogansu`.
+- Pembaruan HyperOS `3.0.302.0.WNNIDXM`: OTA mengganti `boot`; sesudah update perlu flash ulang Cogan Kernel. Status di HP owner belum dicatat di sini.
+
+## Langkah pertama berikutnya
+
+- Baca `CLAUDE.md`, lalu tunggu instruksi owner.
+
+---
+
 # Checkpoint — 4 Nov 2026, sekitar 22.55 WIB
 
 ## Sedang berjalan
