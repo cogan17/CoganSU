@@ -11,12 +11,12 @@ Tidak ada pekerjaan atau run yang sedang berjalan.
 - **#19** (`69466a9`) `ci`: workflow *Hapus log run lama* seperti Cogan Kernel.
 - Rilis CoganSU: `v26.11.05-r4` (`513cad2`, 5 Nov 08.21 WIB) dan **`v26.11.05-r5`** (`e450fd2`, Build #12, 5 Nov 09.15 WIB) terbit sebagai **Release**; `v26.11.04-r3` kini juga Release (bukan Pre-Release). Cek pembaruan aplikasi membaca r5 sebagai Latest.
 - **Cogan Kernel [`v26.11.05-r12`](https://github.com/cogan17/Cogan-Kernel/releases/tag/v26.11.05-r12)** (Release, 5 Nov 09.58 WIB, **diuji di HP**): varian **CoganSU** untuk 6.1.138–6.1.176 dengan manager `2-MANAGER_CoganSU_v26.11.05-r5.apk`, berdampingan dengan KernelSU dan KernelSU Next. CoganSU kini root manager yang dirilis, bukan lagi build uji.
+- **HyperOS `3.0.302.0.WNNIDXM`** (patch keamanan Oktober 2026) sudah terpasang di HP owner; Cogan Kernel **r12** di-flash ulang sesudahnya, root CoganSU jalan, **lolos uji owner** (6 Nov).
 
 ## Tertunda
 
 - **Owner yang menjalankan workflow** (owner, 4 Nov: "nanti biar saya saja yg run workflow"). Asisten tidak menjalankan workflow tanpa diminta.
-- *Opsional, owner:* secret `KEY_ALIAS` `CoganSU` → `cogansu`.
-- Pembaruan HyperOS `3.0.302.0.WNNIDXM`: OTA mengganti `boot`; sesudah update perlu flash ulang Cogan Kernel. Status di HP owner belum dicatat di sini.
+- *Owner:* secret `KEY_ALIAS` menurut owner sudah diubah ke `cogansu`; asisten tidak bisa memastikannya (daftar secret diblokir untuk sesi). Cek tanggal *Updated* di Settings → Secrets. Alias JKS tidak peka huruf besar-kecil, jadi build tetap jalan.
 
 ## Langkah pertama berikutnya
 
