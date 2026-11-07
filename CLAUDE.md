@@ -16,6 +16,7 @@
 - Tanpa kalimat pembuka, sapaan, atau kesimpulan di akhir. Jangan merangkum jawaban.
 - Tanpa kata atau frasa klise AI (mis. *delve*, *tapestry*, *testament*, *seamless*, *crucial*, dan padanannya dalam bahasa Indonesia).
 - Bahasa ringkas, kasual, dan konkret.
+- **Teliti, hati-hati, tanpa duplikasi** (owner, 7 Nov 2026: "kerjakan dengan teliti, hati-hati, tidak ada duplikasi pekerjaan"): periksa dulu apa yang sudah ada (kode, patch, config, dokumen, riwayat) sebelum menambah. Jangan membuat ulang atau menggandakan yang sudah ada, dan pastikan dengan bukti sebelum mengubah.
 
 ## Tanpa atribusi AI
 
