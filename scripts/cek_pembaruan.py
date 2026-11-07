@@ -129,6 +129,7 @@ T = {
         "susfs_ok": "✅ patch SUSFS cocok dengan CoganSU", "susfs_bad": "❌ patch SUSFS tidak cocok dengan CoganSU: tunggu simonpunk",
         "susfs_up_ok": "menggabung KernelSU main sekarang: patch tetap cocok",
         "susfs_up_bad": "⚠️ menggabung KernelSU main sekarang: patch tidak cocok (tunggu simonpunk sebelum menggabung)",
+        "susfs_merge": "❌ patch SUSFS terbaru tidak cocok dengan CoganSU, tapi cocok dengan KernelSU main: gabungkan KernelSU main ke CoganSU (bukan menunggu simonpunk)",
         "unknown": "tidak terbaca",
         "cert": "kernel/cogansu.mk", "cert_ok": "✅ terisi", "cert_bad": "⚠️ masih kosong (docs/kunci.md)",
         "last_release": "rilis terakhir", "no_release": "belum ada rilis",
@@ -148,6 +149,7 @@ T = {
         "susfs_ok": "✅ SUSFS patch fits CoganSU", "susfs_bad": "❌ SUSFS patch does not fit CoganSU: wait for simonpunk",
         "susfs_up_ok": "merging KernelSU main now: the patch still fits",
         "susfs_up_bad": "⚠️ merging KernelSU main now: the patch would not fit (wait for simonpunk before merging)",
+        "susfs_merge": "❌ the newest SUSFS patch does not fit CoganSU but fits KernelSU main: merge KernelSU main into CoganSU (no need to wait for simonpunk)",
         "unknown": "unreadable",
         "cert": "kernel/cogansu.mk", "cert_ok": "✅ filled in", "cert_bad": "⚠️ still empty (docs/kunci.en.md)",
         "last_release": "last release", "no_release": "no release yet",
@@ -172,7 +174,10 @@ def report(lang, up, susfs, csu, bridge):
         susfs_status = t["unknown"]
     else:
         susfs_status = t["susfs_ok"] if susfs["cogansu"] else t["susfs_bad"]
-        if up["pending"] and susfs["upstream"] is not None:
+        if not susfs["cogansu"] and up["pending"] and susfs["upstream"]:
+            # simonpunk already followed KernelSU main: CoganSU only lags behind upstream.
+            susfs_status = t["susfs_merge"]
+        elif up["pending"] and susfs["upstream"] is not None:
             susfs_status += "<br>" + (t["susfs_up_ok"] if susfs["upstream"] else t["susfs_up_bad"])
     rows.append(f"| {t['susfs']} | {SUSFS_BRANCH} | `{susfs['commit'][:12] or '-'}` · {wib(susfs['date'], lang)} | "
                 f"{susfs_status} |")
