@@ -125,11 +125,12 @@ T = {
         "head": "| Komponen | CoganSU sekarang | Terbaru | Status |",
         "ksu": "KernelSU (hulu)", "susfs": "SUSFS (simonpunk)", "csu": "CoganSU", "ck": "Cogan Kernel",
         "release": "rilis", "main": "main", "base": "dasar",
-        "pending": "{n} commit belum digabung ({areas})", "uptodate": "✅ sudah terbaru",
-        "susfs_ok": "✅ patch SUSFS cocok dengan CoganSU", "susfs_bad": "❌ patch SUSFS tidak cocok dengan CoganSU: tunggu simonpunk",
-        "susfs_up_ok": "menggabung KernelSU main sekarang: patch tetap cocok",
-        "susfs_up_bad": "⚠️ menggabung KernelSU main sekarang: patch tidak cocok (tunggu simonpunk sebelum menggabung)",
-        "susfs_merge": "❌ patch SUSFS terbaru tidak cocok dengan CoganSU, tapi cocok dengan KernelSU main: gabungkan KernelSU main ke CoganSU (bukan menunggu simonpunk)",
+        "pending": "{n} commit hulu baru ({areas}): digabung otomatis di Build CoganSU berikutnya", "uptodate": "✅ sudah terbaru",
+        "susfs_ok": "✅ patch SUSFS cocok dengan CoganSU", "susfs_bad": "⏳ patch SUSFS belum cocok dengan CoganSU maupun KernelSU main: tunggu simonpunk",
+        "susfs_own": "❌ patch SUSFS cocok dengan KernelSU main tetapi tidak dengan CoganSU: perubahan CoganSU di `kernel/` perlu disesuaikan",
+        "susfs_up_ok": "tetap cocok setelah KernelSU main digabung otomatis",
+        "susfs_up_bad": "⏳ KernelSU main terbaru belum cocok dengan SUSFS: tunggu simonpunk (root KernelSU juga menunggu)",
+        "susfs_merge": "ℹ️ patch SUSFS terbaru cocok dengan KernelSU main: Build CoganSU berikutnya menggabungnya otomatis",
         "unknown": "tidak terbaca",
         "cert": "kernel/cogansu.mk", "cert_ok": "✅ terisi", "cert_bad": "⚠️ masih kosong (docs/kunci.md)",
         "last_release": "rilis terakhir", "no_release": "belum ada rilis",
@@ -145,11 +146,12 @@ T = {
         "head": "| Component | CoganSU now | Newest | Status |",
         "ksu": "KernelSU (upstream)", "susfs": "SUSFS (simonpunk)", "csu": "CoganSU", "ck": "Cogan Kernel",
         "release": "release", "main": "main", "base": "base",
-        "pending": "{n} commits not merged ({areas})", "uptodate": "✅ up to date",
-        "susfs_ok": "✅ SUSFS patch fits CoganSU", "susfs_bad": "❌ SUSFS patch does not fit CoganSU: wait for simonpunk",
-        "susfs_up_ok": "merging KernelSU main now: the patch still fits",
-        "susfs_up_bad": "⚠️ merging KernelSU main now: the patch would not fit (wait for simonpunk before merging)",
-        "susfs_merge": "❌ the newest SUSFS patch does not fit CoganSU but fits KernelSU main: merge KernelSU main into CoganSU (no need to wait for simonpunk)",
+        "pending": "{n} new upstream commits ({areas}): merged automatically by the next Build CoganSU", "uptodate": "✅ up to date",
+        "susfs_ok": "✅ SUSFS patch fits CoganSU", "susfs_bad": "⏳ SUSFS patch fits neither CoganSU nor KernelSU main: wait for simonpunk",
+        "susfs_own": "❌ SUSFS patch fits KernelSU main but not CoganSU: CoganSU's changes in `kernel/` need adapting",
+        "susfs_up_ok": "still fits once KernelSU main is merged automatically",
+        "susfs_up_bad": "⏳ the newest KernelSU main does not fit SUSFS yet: wait for simonpunk (the KernelSU root waits too)",
+        "susfs_merge": "ℹ️ the newest SUSFS patch fits KernelSU main: the next Build CoganSU merges it automatically",
         "unknown": "unreadable",
         "cert": "kernel/cogansu.mk", "cert_ok": "✅ filled in", "cert_bad": "⚠️ still empty (docs/kunci.en.md)",
         "last_release": "last release", "no_release": "no release yet",
@@ -165,7 +167,7 @@ T = {
 def report(lang, up, susfs, csu, bridge):
     t = T[lang]
     rows = [t["head"], "|---|---|---|---|"]
-    status = t["uptodate"] if not up["pending"] else "⚠️ " + t["pending"].format(
+    status = t["uptodate"] if not up["pending"] else "ℹ️ " + t["pending"].format(
         n=len(up["pending"]), areas=area_counts(up["pending"], lang))
     rows.append(f"| {t['ksu']} | {t['base']} `{up['base'][:12]}` · {wib(up['base_date'], lang)} | "
                 f"{t['main']} `{up['head'][:12]}` · {wib(up['head_date'], lang)}<br>{t['release']} "
@@ -173,12 +175,17 @@ def report(lang, up, susfs, csu, bridge):
     if susfs["cogansu"] is None:
         susfs_status = t["unknown"]
     else:
-        susfs_status = t["susfs_ok"] if susfs["cogansu"] else t["susfs_bad"]
-        if not susfs["cogansu"] and up["pending"] and susfs["upstream"]:
-            # simonpunk already followed KernelSU main: CoganSU only lags behind upstream.
-            susfs_status = t["susfs_merge"]
-        elif up["pending"] and susfs["upstream"] is not None:
-            susfs_status += "<br>" + (t["susfs_up_ok"] if susfs["upstream"] else t["susfs_up_bad"])
+        # Build CoganSU merges KernelSU main by itself (owner 2026-11-07): waiting is only for simonpunk.
+        if susfs["cogansu"]:
+            susfs_status = t["susfs_ok"]
+            if up["pending"] and susfs["upstream"] is not None:
+                susfs_status += "<br>" + (t["susfs_up_ok"] if susfs["upstream"] else t["susfs_up_bad"])
+        elif susfs["upstream"] and up["pending"]:
+            susfs_status = t["susfs_merge"]       # CoganSU only lags KernelSU main
+        elif susfs["upstream"]:
+            susfs_status = t["susfs_own"]         # KernelSU main is in, CoganSU's own change breaks the patch
+        else:
+            susfs_status = t["susfs_bad"]
     rows.append(f"| {t['susfs']} | {SUSFS_BRANCH} | `{susfs['commit'][:12] or '-'}` · {wib(susfs['date'], lang)} | "
                 f"{susfs_status} |")
     rel = csu["release"]

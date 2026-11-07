@@ -142,7 +142,8 @@ jobs:
               || { echo "::error::$tag bukan tag rilis vYY.MM.DD-rN, tidak ditimpa / not a release tag, not replaced"; exit 1; }
             replaced=true
           fi
-          sha="$(python3 -c 'import json; print(json.load(open("run.json"))["head_sha"])')"
+          # The build's commit: the run's commit, or Build CoganSU's automatic KernelSU merge on top of it.
+          sha="$(sed -n 's/^COMMIT=//p' info/release.env)"
           # GITHUB_TOKEN cannot tag a commit whose .github/workflows differ from this run's (HTTP 403):
           # then the tag goes on this run's commit; the notes still link the build run and its commit.
           workflows_at() { gh api "repos/$GITHUB_REPOSITORY/contents/.github?ref=$1" --jq '.[] | select(.name == "workflows") | .sha'; }

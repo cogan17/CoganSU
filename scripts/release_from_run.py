@@ -4,7 +4,7 @@
     release_from_run.py INFO_DIR FILES_DIR --repo R --run-url U --sha S [--tested] [--note ..] [--note-en ..]
                         [--telegram DIR] [--text-only] [--upstream-ref upstream/main] > notes.md
 
-Writes INFO_DIR/release.env (RELEASE, RELEASE_NAME). Exit 1 with ::error:: when anything does not match.
+Writes INFO_DIR/release.env (RELEASE, RELEASE_NAME, COMMIT: the build's commit). Exit 1 with ::error:: when anything does not match.
 """
 import argparse
 import hashlib
@@ -66,7 +66,9 @@ def validate(info, files, sha):
     missing = [key for key in REQUIRED if not env.get(key)]
     if missing:
         fail(f"metadata tidak lengkap / incomplete metadata: {', '.join(missing)}")
-    if env["COMMIT"] != sha:
+    # The build commit is the run's commit, or Build CoganSU's automatic KernelSU merge on top of it
+    # (scripts/gabung_kernelsu.py: a merge whose first parent is the run's commit).
+    if env["COMMIT"] != sha and git("rev-parse", "-q", "--verify", f"{env['COMMIT']}^1", check=False) != sha:
         fail(f"commit build {env['COMMIT'][:12]} bukan commit run / not the run's commit {sha[:12]}")
     if env["PACKAGE"] != PACKAGE:
         fail(f"paket {env['PACKAGE']} bukan / not {PACKAGE}")
@@ -201,6 +203,7 @@ def summary(posts):
 def prepare(info, files, repo, run_url, sha, tested=False, note="", note_en="", telegram=None,
             text_only=False, upstream_ref="upstream/main", api=gh):
     env = validate(info, files, sha)
+    sha = env["COMMIT"]
     tag = env["RELEASE"]
     prev = previous_release(repo, tag, api)
     diff = changes(prev["tag_name"], sha, upstream_ref) if prev else None
@@ -219,7 +222,7 @@ def prepare(info, files, repo, run_url, sha, tested=False, note="", note_en="", 
                                              encoding="utf-8")
     text = notes(env, "id", prev, diff, run_url, tested, note) + "\n" + \
         notes(env, "en", prev, diff, run_url, tested, note_en)
-    metadata = {"RELEASE": tag, "RELEASE_NAME": env["RELEASE_NAME"]}
+    metadata = {"RELEASE": tag, "RELEASE_NAME": env["RELEASE_NAME"], "COMMIT": sha}
     return metadata, text
 
 
