@@ -1,3 +1,28 @@
+# Checkpoint — 7 Nov 2026, sekitar 09.30 WIB
+
+## Sedang berjalan
+
+Tidak ada pekerjaan atau run yang sedang berjalan.
+
+## Sudah selesai (7 Nov)
+
+- **#24** (`ffaddd6`): gabung KernelSU main `019a3c01`. Patch SUSFS `5f85e6e` gagal di CoganSU lama (`kernel/selinux/rules.c:84`) dan cocok setelah digabung.
+- **#25** (`81accda`): **Build CoganSU menggabung KernelSU main terbaru otomatis** (job `sync`, `scripts/gabung_kernelsu.py`, push merge ke `main`). Rilis dari run menerima commit hasil gabung. Cek pembaruan menulis "tunggu" hanya untuk simonpunk.
+- Cogan-Kernel #157–#162: pesan CoganSU tanpa "tunggu" palsu (`BuildFirst`), cek SUSFS CoganSU di Cek pembaruan, dan **Builder menjalankan Build CoganSU sendiri** lewat secret `COGANSU_TOKEN` (sudah diisi owner 7 Nov).
+- **Terbukti CI**: Builder [run 42324912836](https://github.com/cogan17/Cogan-Kernel/actions/runs/42324912836) (hijau, ±08.35–09.25 WIB) memicu Build CoganSU [run 42324967976](https://github.com/cogan17/CoganSU/actions/runs/42324967976) (hijau). Hasilnya rilis **CoganSU `v26.11.07-r14`** (Pre-Release, KernelSU `019a3c01`, SUSFS `5f85e6e` cocok), lalu kernel `v26.11.07-r15` varian CoganSU (138–176) dengan `2-MANAGER_CoganSU_v26.11.07-r14.apk`. Belum diuji di HP.
+
+## Tertunda
+
+- **Owner yang menjalankan workflow.** Asisten tidak menjalankan workflow tanpa diminta.
+- Push merge KernelSU oleh `GITHUB_TOKEN` di job `sync` belum pernah terjadi (run 14 tidak perlu menggabung). Bila GitHub menolak (commit hulu mengubah `.github/workflows`), build berhenti dengan pesan, dan gabungkan sekali lewat PR.
+- Uji HP r15 varian CoganSU + manager r14, bila owner mau merilis.
+
+## Langkah pertama berikutnya
+
+- Baca `CLAUDE.md`, lalu tunggu instruksi owner.
+
+---
+
 # Checkpoint — 6 Nov 2026
 
 ## Sedang berjalan
