@@ -4,9 +4,13 @@
 # with kernel/cogansu.mk matching). Build Revision rN names the release vYY.MM.DD-rN (UTC date), empty =
 # the run number. An existing tag is never replaced here: use a new Build Revision, or "timpa" in
 # Rilis dari run. Artifacts: the APK as it is (unarchived) and build-info (build.env).
+# Every build on main first merges the newest KernelSU main into CoganSU and pushes that merge (owner
+# 2026-11-07: "jika saya build otomatis akan mengupdate dari KSU"), so CoganSU never lags KernelSU and only
+# waits when KernelSU/SUSFS themselves wait (scripts/gabung_kernelsu.py).
 #
 # Membangun CoganSU: ksud (arm64) dan APK manager CoganSU, ditandatangani kunci rilis CoganSU.
 # Release Type CI = artifact saja; Pre-Release/Release langsung terbit. Build Revision rN = nama rilis.
+# Setiap build dari main lebih dulu menggabung KernelSU main terbaru secara otomatis.
 name: Build CoganSU
 
 on:
@@ -34,11 +38,17 @@ concurrency:
 
 env:
   UPSTREAM: https://github.com/tiann/KernelSU.git
+  SUSFS: https://gitlab.com/simonpunk/susfs4ksu.git
+  SUSFS_BRANCH: gki-android14-6.1
 
 jobs:
-  ksud:
-    name: ksud (arm64)
+  sync:
+    name: KernelSU terbaru / newest KernelSU
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # pushes the automatic KernelSU merge to main
+    outputs:
+      sha: ${{ steps.sync.outputs.sha }}
     steps:
       - name: Periksa isian / check the form
         env:
@@ -55,6 +65,38 @@ jobs:
 
       - uses: actions/checkout@v7.0.1
         with:
+          fetch-depth: 0
+
+      - name: Gabung KernelSU main / merge KernelSU main
+        id: sync
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags "$UPSTREAM" '+refs/heads/main:refs/remotes/upstream/main'
+          git fetch -q --no-tags --depth=1 "$SUSFS" "+refs/heads/$SUSFS_BRANCH:refs/check/susfs" \
+            || echo "::warning::SUSFS tidak terbaca / could not be read"
+          git config user.name Cogan
+          git config user.email 79615344+cogan17@users.noreply.github.com
+          merge=(); [ "$GITHUB_REF_NAME" = "$DEFAULT_BRANCH" ] && merge=(--merge)
+          python3 scripts/gabung_kernelsu.py "${merge[@]}" --out "$GITHUB_OUTPUT" --summary "$GITHUB_STEP_SUMMARY"
+          if grep -q '^merged=yes$' "$GITHUB_OUTPUT"; then
+            # GITHUB_TOKEN may not push upstream commits that change .github/workflows, nor to a protected
+            # branch: then a person merges KernelSU main once (a PR), and the next build goes on by itself.
+            git push origin "HEAD:refs/heads/$GITHUB_REF_NAME" || {
+              echo "::error::Gabung KernelSU main tidak bisa di-push (GitHub menolak: commit hulu mengubah .github/workflows atau main terlindungi). Gabungkan KernelSU main sekali lewat PR, lalu build lagi / the merge could not be pushed; merge KernelSU main once through a PR, then build again"
+              exit 1
+            }
+          fi
+
+  ksud:
+    name: ksud (arm64)
+    needs: sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ needs.sync.outputs.sha }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -93,13 +135,14 @@ jobs:
 
   manager:
     name: CoganSU manager
-    needs: ksud
+    needs: [sync, ksud]
     runs-on: ubuntu-latest
     env:
       RELEASE_TYPE: ${{ inputs.release_type }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
+          ref: ${{ needs.sync.outputs.sha }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -219,7 +262,7 @@ jobs:
             echo "RELEASE_NAME=CoganSU $release"
             echo "VERSION=$VERSION"
             echo "CODE=$CODE"
-            echo "COMMIT=$GITHUB_SHA"
+            echo "COMMIT=$(git rev-parse HEAD)"
             echo "PACKAGE=com.cogan.su"
             echo "APK=$(basename "$APK")"
             echo "APK_SHA256=$(sha256sum "$APK" | cut -d' ' -f1)"
@@ -252,6 +295,7 @@ jobs:
           VERSION: ${{ steps.apk.outputs.version }}
           CODE: ${{ steps.apk.outputs.code }}
           RELEASE: ${{ steps.info.outputs.release }}
+          COMMIT: ${{ needs.sync.outputs.sha }}
         run: |
           case "$STATE" in
             match) kid="✅ cocok dengan \`kernel/cogansu.mk\`"; ken="✅ matches \`kernel/cogansu.mk\`" ;;
@@ -266,7 +310,7 @@ jobs:
             echo "| Rilis / Release | \`$RELEASE\` ($RELEASE_TYPE) | \`$RELEASE\` ($RELEASE_TYPE) |"
             echo "| APK | \`$NAME\` | \`$NAME\` |"
             echo "| Paket / Package | \`com.cogan.su\` | \`com.cogan.su\` |"
-            echo "| Commit | \`${GITHUB_SHA::12}\` | \`${GITHUB_SHA::12}\` |"
+            echo "| Commit | \`${COMMIT::12}\` | \`${COMMIT::12}\` |"
             echo "| Sertifikat / Certificate | \`$SIZE\` \`$HASH\` | \`$SIZE\` \`$HASH\` |"
             echo "| Kernel | $kid | $ken |"
             echo
@@ -284,7 +328,7 @@ jobs:
 
   release:
     name: Terbit / publish (${{ inputs.release_type }})
-    needs: manager
+    needs: [sync, manager]
     if: ${{ inputs.release_type != 'CI' }}
     runs-on: ubuntu-latest
     permissions:
@@ -293,9 +337,11 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       RELEASE_TYPE: ${{ inputs.release_type }}
       UPSTREAM: https://github.com/tiann/KernelSU.git
+      COMMIT: ${{ needs.sync.outputs.sha }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
+          ref: ${{ needs.sync.outputs.sha }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -322,12 +368,12 @@ jobs:
             echo "::error::Rilis $tag sudah ada; tidak ditimpa di sini. Pakai Build Revision baru, atau Rilis dari run dengan timpa / release $tag exists; use a new Build Revision, or Rilis dari run with timpa"
             exit 1
           fi
-          python3 scripts/release_from_run.py info files --repo "$GITHUB_REPOSITORY" --sha "$GITHUB_SHA" \
+          python3 scripts/release_from_run.py info files --repo "$GITHUB_REPOSITORY" --sha "$COMMIT" \
             --telegram telegram --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" > notes.md
           title="$(sed -n 's/^RELEASE_NAME=//p' info/release.env)"
           (cd files && sha256sum -- * > checksums.txt)
           mode=(--prerelease); [ "$RELEASE_TYPE" = "Release" ] && mode=(--latest)
-          gh release create "$tag" files/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" "${mode[@]}" \
+          gh release create "$tag" files/* --repo "$GITHUB_REPOSITORY" --target "$COMMIT" "${mode[@]}" \
             --title "$title" --notes-file notes.md
           {
             echo "## Rilis / release: [$tag]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$tag) ($RELEASE_TYPE)"
