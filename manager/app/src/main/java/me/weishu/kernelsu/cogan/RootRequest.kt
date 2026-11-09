@@ -90,10 +90,11 @@ object RootRequest {
     private const val SEEN = "$STATE/root_request_seen"
 
     /**
-     * The boot script. The APK check runs here, as root in the background (checking every installed
-     * app can take tens of minutes, far longer than a broadcast receiver may run); for each app that
-     * uses root it sends the package to [RootRequestReceiver], which asks the user. Each APK path is
-     * checked once ($SEEN); an update gets a new path and is checked again.
+     * The boot script. The APK check runs here, as root in the background; for each app that uses root
+     * it sends the package to [RootRequestReceiver], which asks the user. A fast pass (known apps and
+     * ACCESS_SUPERUSER from one dumpsys) asks within seconds; the dex check, which can take minutes
+     * over every installed app, follows (owner, 10 Nov 2026: waiting minutes was too slow). Each APK
+     * path is checked once ($SEEN); an update gets a new path and is checked again.
      */
     private fun script(context: Context): String {
         val target = "${context.packageName}/${RootRequestReceiver::class.java.name}"
@@ -104,22 +105,32 @@ object RootRequest {
             |KNOWN=" ${KNOWN.joinToString(" ")} "
             |R='$DEX_MARKERS'
             |mkdir -p $STATE; touch $SEEN
+            |ask() { am broadcast -n $target -a $ACTION_CHECK --es $EXTRA_PACKAGE "${'$'}1" --ei $EXTRA_UID "${'$'}2" >/dev/null 2>&1; }
             |scan() {
-            |  pm list packages -3 -f -U | sed 's/^package://' | while read -r l u; do
+            |  pm list packages -3 -f -U | sed 's/^package://' > $STATE/list
+            |  # Fast pass, seconds: known root apps and ACCESS_SUPERUSER, read for every app in one dumpsys.
+            |  SU=" ${'$'}(dumpsys package 2>/dev/null | awk '/^  Package \[/ { p = substr(${'$'}2, 2, length(${'$'}2) - 2) } /android\.permission\.ACCESS_SUPERUSER/ && p != "" { print p }' | sort -u | tr '\n' ' ') "
+            |  : > $STATE/slow
+            |  while read -r l u; do
             |    a=${'$'}{l%=*}; p=${'$'}{l##*=}; uid=${'$'}{u#uid:}; uid=${'$'}{uid%%,*}
             |    grep -qxF "${'$'}p|${'$'}a" $SEEN && continue
+            |    case "${'$'}KNOWN${'$'}SU" in
+            |      *" ${'$'}p "*) echo "${'$'}p|${'$'}a" >> $SEEN; ask "${'$'}p" "${'$'}uid" ;;
+            |      *) echo "${'$'}l ${'$'}u" >> $STATE/slow ;;
+            |    esac
+            |  done < $STATE/list
+            |  # Slow pass, in the background of the same run: root libraries inside the dex.
+            |  while read -r l u; do
+            |    a=${'$'}{l%=*}; p=${'$'}{l##*=}; uid=${'$'}{u#uid:}; uid=${'$'}{uid%%,*}
             |    echo "${'$'}p|${'$'}a" >> $SEEN
-            |    hit=
-            |    case "${'$'}KNOWN" in *" ${'$'}p "*) hit=1 ;; esac
-            |    [ -z "${'$'}hit" ] && for d in ${'$'}(${'$'}B unzip -l "${'$'}a" 2>/dev/null | grep -o 'classes[0-9]*\.dex'); do
-            |      ${'$'}B unzip -p "${'$'}a" "${'$'}d" 2>/dev/null | grep -a -q -E "${'$'}R" && hit=1 && break
+            |    for d in ${'$'}(${'$'}B unzip -l "${'$'}a" 2>/dev/null | grep -o 'classes[0-9]*\.dex'); do
+            |      ${'$'}B unzip -p "${'$'}a" "${'$'}d" 2>/dev/null | grep -a -q -E "${'$'}R" && ask "${'$'}p" "${'$'}uid" && break
             |    done
-            |    [ -z "${'$'}hit" ] && dumpsys package "${'$'}p" 2>/dev/null | grep -q ACCESS_SUPERUSER && hit=1
-            |    [ -n "${'$'}hit" ] && am broadcast -n $target -a $ACTION_CHECK --es $EXTRA_PACKAGE "${'$'}p" --ei $EXTRA_UID "${'$'}uid" >/dev/null 2>&1
-            |  done
+            |  done < $STATE/slow
             |}
             |until [ "${'$'}(getprop sys.boot_completed)" = 1 ]; do sleep 5; done
-            |scan
+            |# Twice: an app installed while the first (long) check ran is caught by the second, quick one.
+            |scan; scan
             |${'$'}B inotifyd - /data/system:wy | while read -r ev dir name; do
             |  [ "${'$'}name" = packages.list ] && scan
             |done
