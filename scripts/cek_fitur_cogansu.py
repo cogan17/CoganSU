@@ -48,6 +48,8 @@ CHECKS = [
     ("Teks CoganSU (EN) / strings", f"{APP}/res/values/strings_cogan.xml", 'name="cogan_kernel_title"'),
     ("Teks CoganSU (ID) / strings", f"{APP}/res/values-in/strings_cogan.xml", 'name="cogan_kernel_title"'),
     ("Ikon CoganSU / launcher icon", f"{APP}/res/mipmap-xxxhdpi/ic_launcher_cogan.png", None),
+    ("WebUI hanya halaman modul / WebUI loads module pages only", f"{KT}/ui/webui/WebViewHelper.kt", "if (isModulePage(url)) return false"),
+    ("WebUI tanpa frame web luar / WebUI blocks web frames", f"{KT}/ui/webui/SuFilePathHandler.java", "frame-src \x27self\x27 blob: data:; form-action \x27self\x27"),
 ]
 
 
