@@ -13,4 +13,20 @@
     <string name="cogan_link_telegram_title">Komunitas Telegram</string>
     <string name="cogan_link_telegram_summary">Kabar, rilis dan bantuan</string>
     <string name="cogan_based_on">Berbasis KernelSU karya weishu dan para kontributornya (GPL-3.0)</string>
+    <string name="cogan_root_request_setting">Tanya root untuk aplikasi baru</string>
+    <string name="cogan_root_request_setting_summary">Saat aplikasi pengguna root dipasang atau diperbarui, CoganSU bertanya sekali apakah diizinkan</string>
+    <string name="cogan_root_request_channel">Permintaan root</string>
+    <string name="cogan_root_request_title">%1$s meminta akses root</string>
+    <string name="cogan_root_request_text">Izinkan menambahkannya ke Superuser. Tolak berarti tidak ditanya lagi.</string>
+    <string name="cogan_root_request_allow">Izinkan</string>
+    <string name="cogan_root_request_deny">Tolak</string>
+    <string name="cogan_root_request_failed">Gagal, pastikan root berfungsi</string>
+    <string name="cogan_root_backup">Cadangkan izin root</string>
+    <string name="cogan_root_backup_summary">Simpan aplikasi yang diizinkan dan daftar jangan-tanya ke file</string>
+    <string name="cogan_root_backup_done">Izin root tersimpan</string>
+    <string name="cogan_root_restore">Pulihkan izin root</string>
+    <string name="cogan_root_restore_summary">Izinkan lagi root untuk aplikasi terpasang dari file cadangan</string>
+    <string name="cogan_root_restore_done">Root dipulihkan untuk %1$d aplikasi</string>
+    <string name="cogan_root_never_ask">Jangan tanya root</string>
+    <string name="cogan_root_never_ask_summary">CoganSU tidak akan menanyakan aplikasi ini saat dipasang atau diperbarui</string>
 </resources>

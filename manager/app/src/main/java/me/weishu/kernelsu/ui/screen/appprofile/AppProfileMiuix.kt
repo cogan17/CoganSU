@@ -323,6 +323,8 @@ private fun AppProfileInner(
                     checked = isRootGranted,
                     onCheckedChange = { onProfileChange(profile.copy(allowSu = it)) },
                 )
+                // CoganSU: keep this app off the "ask root for new apps" questions.
+                me.weishu.kernelsu.cogan.NeverAskMiuix(profile.name)
             }
         }
 

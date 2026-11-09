@@ -236,6 +236,8 @@ private fun AppProfileInner(
                         onCheckedChange = { onProfileChange(profile.copy(allowSu = it)) },
                     )
                 }
+                // CoganSU: keep this app off the "ask root for new apps" questions.
+                if (!isSpecialApp) add { me.weishu.kernelsu.cogan.NeverAskMaterial(profile.name) }
                 add {
                     SegmentedListItem(
                         headlineContent = { Text(stringResource(R.string.profile)) },

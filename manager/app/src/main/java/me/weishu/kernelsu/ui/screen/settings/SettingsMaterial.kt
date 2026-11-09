@@ -312,6 +312,10 @@ fun SettingPagerMaterial(
                                 onCheckedChange = actions.onSetEnableWebDebugging
                             )
                         },
+                        // CoganSU: ask root for new apps, back up / restore root permissions.
+                        { me.weishu.kernelsu.cogan.RootRequestSwitchMaterial() },
+                        { me.weishu.kernelsu.cogan.RootRequestBackupMaterial() },
+                        { me.weishu.kernelsu.cogan.RootRequestRestoreMaterial() },
                         {
                             SegmentedSwitchItem(
                                 icon = Icons.Filled.FlashOn,

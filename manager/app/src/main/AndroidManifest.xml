@@ -116,6 +116,11 @@
                 <action android:name="me.weishu.kernelsu.magica.LAUNCH" />
             </intent-filter>
         </receiver>
+
+        <!-- CoganSU: "ask root for new apps"; the boot watcher broadcasts to it as root (cogan/RootRequest.kt). -->
+        <receiver
+            android:name=".cogan.RootRequestReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>

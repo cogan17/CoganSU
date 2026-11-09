@@ -397,6 +397,8 @@ fun SettingPagerMiuix(
                                 checked = uiState.enableWebDebugging,
                                 onCheckedChange = actions.onSetEnableWebDebugging
                             )
+                            // CoganSU: ask root for new apps, back up / restore root permissions.
+                            me.weishu.kernelsu.cogan.RootRequestMiuix()
                             SwitchPreference(
                                 title = stringResource(id = R.string.settings_auto_jailbreak),
                                 summary = stringResource(id = R.string.settings_auto_jailbreak_summary),
