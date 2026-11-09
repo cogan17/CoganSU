@@ -45,9 +45,6 @@ CHECKS = [
      '<item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>'),
     ("Cek pembaruan dari rilis CoganSU / update check", f"{KT}/ui/util/Downloader.kt", "Cogan.MANAGER_LATEST_RELEASE_API"),
     ("Halaman Tentang CoganSU / About page", f"{KT}/ui/screen/about/AboutScreen.kt", "Cogan.MANAGER_REPO_URL"),
-    ("Teks CoganSU (EN) / strings", f"{APP}/res/values/strings_cogan.xml", 'name="cogan_kernel_title"'),
-    ("Teks CoganSU (ID) / strings", f"{APP}/res/values-in/strings_cogan.xml", 'name="cogan_kernel_title"'),
-    ("Ikon CoganSU / launcher icon", f"{APP}/res/mipmap-xxxhdpi/ic_launcher_cogan.png", None),
     ("Tanya root: logika dan pemicu / ask root: logic and trigger", f"{KT}/cogan/RootRequest.kt", "inotifyd - /data/system:wy"),
     ("Tanya root: receiver di manifest / receiver", f"{APP}/AndroidManifest.xml", "android:name=\".cogan.RootRequestReceiver\""),
     ("Tanya root di Setelan (Material) / Settings", f"{KT}/ui/screen/settings/SettingsMaterial.kt", "RootRequestSwitchMaterial()"),
@@ -55,6 +52,9 @@ CHECKS = [
     ("Tanya root di Setelan (Miuix) / Settings", f"{KT}/ui/screen/settings/SettingsMiuix.kt", "RootRequestMiuix()"),
     ("Jangan tanya root (Material) / never ask", f"{KT}/ui/screen/appprofile/AppProfileMaterial.kt", "NeverAskMaterial(profile.name)"),
     ("Jangan tanya root (Miuix) / never ask", f"{KT}/ui/screen/appprofile/AppProfileMiuix.kt", "NeverAskMiuix(profile.name)"),
+    ("Teks CoganSU (EN) / strings", f"{APP}/res/values/strings_cogan.xml", 'name="cogan_kernel_title"'),
+    ("Teks CoganSU (ID) / strings", f"{APP}/res/values-in/strings_cogan.xml", 'name="cogan_kernel_title"'),
+    ("Ikon CoganSU / launcher icon", f"{APP}/res/mipmap-xxxhdpi/ic_launcher_cogan.png", None),
 ]
 
 
