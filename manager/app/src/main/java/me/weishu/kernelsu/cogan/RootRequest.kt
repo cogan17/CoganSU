@@ -21,8 +21,9 @@ import java.io.OutputStream
 /**
  * CoganSU: "ask for root" like Magisk, without touching the kernel. KernelSU + SUSFS hide `su` from
  * apps that are not allowed (they never reach KernelSU's code), so an app's attempt cannot be seen.
- * Instead, when an app is installed or updated, CoganSU checks its APK for signs that it uses root
- * and asks once: Allow (adds it to Superuser) or Deny (never asked again).
+ * Instead CoganSU checks APKs for signs that they use root, when the feature is turned on (every
+ * installed app) and when an app is installed or updated, and asks once: Allow (adds it to Superuser)
+ * or Deny (never asked again).
  *
  * The trigger is a boot script in /data/adb/service.d that watches packages.list (busybox inotifyd)
  * and sends an explicit broadcast to [RootRequestReceiver]. Nothing new is visible to other apps.
@@ -31,7 +32,6 @@ object RootRequest {
     private const val PREFS = "cogan_root_request"
     private const val KEY_ENABLED = "enabled"
     private const val KEY_NEVER = "never"
-    private const val KEY_SEEN = "seen"
     private const val CHANNEL = "cogan_root_request"
     private const val BUSYBOX = "/data/adb/ksu/bin/busybox"
     private const val SCRIPT = "/data/adb/service.d/cogansu_root_request.sh"
@@ -86,65 +86,65 @@ object RootRequest {
         name to uid
     }.toMap()
 
-    /** Third-party packages as "package path uid" (pm list packages -3 -f -U). */
-    private fun installed(): List<Triple<String, String, Int>> =
-        sh("pm list packages -3 -f -U").mapNotNull { line ->
-            // package:/data/app/~~x==/pkg-y==/base.apk=pkg uid:10123
-            val body = line.removePrefix("package:")
-            val uidAt = body.lastIndexOf(" uid:")
-            val eq = body.lastIndexOf('=', if (uidAt < 0) body.length else uidAt)
-            if (uidAt < 0 || eq < 0) return@mapNotNull null
-            val uid = body.substring(uidAt + 5).trim().substringBefore(',').toIntOrNull() ?: return@mapNotNull null
-            Triple(body.substring(eq + 1, uidAt), body.substring(0, eq), uid)
-        }
+    private const val STATE = "/data/adb/cogansu"
+    private const val SEEN = "$STATE/root_request_seen"
 
-    /** Turns the feature on or off: the boot script, its watcher, and the list of apps already seen. */
+    /**
+     * The boot script. The APK check runs here, as root in the background (checking every installed
+     * app can take tens of minutes, far longer than a broadcast receiver may run); for each app that
+     * uses root it sends the package to [RootRequestReceiver], which asks the user. Each APK path is
+     * checked once ($SEEN); an update gets a new path and is checked again.
+     */
+    private fun script(context: Context): String {
+        val target = "${context.packageName}/${RootRequestReceiver::class.java.name}"
+        return """
+            |#!/system/bin/sh
+            |# CoganSU: Settings > Ask root for new apps (cogan/RootRequest.kt). Removed when it is turned off.
+            |B=$BUSYBOX
+            |KNOWN=" ${KNOWN.joinToString(" ")} "
+            |R='$DEX_MARKERS'
+            |mkdir -p $STATE; touch $SEEN
+            |scan() {
+            |  pm list packages -3 -f -U | sed 's/^package://' | while read -r l u; do
+            |    a=${'$'}{l%=*}; p=${'$'}{l##*=}; uid=${'$'}{u#uid:}; uid=${'$'}{uid%%,*}
+            |    grep -qxF "${'$'}p|${'$'}a" $SEEN && continue
+            |    echo "${'$'}p|${'$'}a" >> $SEEN
+            |    hit=
+            |    case "${'$'}KNOWN" in *" ${'$'}p "*) hit=1 ;; esac
+            |    [ -z "${'$'}hit" ] && for d in ${'$'}(${'$'}B unzip -l "${'$'}a" 2>/dev/null | grep -o 'classes[0-9]*\.dex'); do
+            |      ${'$'}B unzip -p "${'$'}a" "${'$'}d" 2>/dev/null | grep -a -q -E "${'$'}R" && hit=1 && break
+            |    done
+            |    [ -z "${'$'}hit" ] && dumpsys package "${'$'}p" 2>/dev/null | grep -q ACCESS_SUPERUSER && hit=1
+            |    [ -n "${'$'}hit" ] && am broadcast -n $target -a $ACTION_CHECK --es $EXTRA_PACKAGE "${'$'}p" --ei $EXTRA_UID "${'$'}uid" >/dev/null 2>&1
+            |  done
+            |}
+            |until [ "${'$'}(getprop sys.boot_completed)" = 1 ]; do sleep 5; done
+            |scan
+            |${'$'}B inotifyd - /data/system:wy | while read -r ev dir name; do
+            |  [ "${'$'}name" = packages.list ] && scan
+            |done
+            |""".trimMargin()
+    }
+
+    /**
+     * Turns the feature on or off. On: every installed app is checked again (owner, 10 Nov 2026: an app
+     * installed before turning it on, Root Explorer, was never asked about). Off: script and watcher go.
+     */
     suspend fun setEnabled(context: Context, enabled: Boolean) = lock.withLock {
         if (enabled) {
-            // Only apps installed or updated from now on are asked about.
-            prefs(context).edit { putStringSet(KEY_SEEN, installed().map { "${it.first}|${it.second}" }.toSet()) }
-            val target = "${context.packageName}/${RootRequestReceiver::class.java.name}"
-            val script = """
-                |#!/system/bin/sh
-                |# CoganSU: tells CoganSU when an app is installed or updated (Settings > Ask root for new apps).
-                |until [ "${'$'}(getprop sys.boot_completed)" = 1 ]; do sleep 5; done
-                |$BUSYBOX inotifyd - /data/system:wy | while read -r ev dir name; do
-                |  [ "${'$'}name" = packages.list ] && am broadcast -n $target -a $ACTION_CHECK >/dev/null 2>&1
-                |done
-                |""".trimMargin()
-            sh("mkdir -p /data/adb/service.d && printf '%s' ${quote(script)} > $SCRIPT && chmod 755 $SCRIPT")
-            sh("pkill -f cogansu_root_request.sh; setsid nohup sh $SCRIPT >/dev/null 2>&1 &")
+            sh("mkdir -p /data/adb/service.d && printf '%s' ${quote(script(context))} > $SCRIPT && chmod 755 $SCRIPT")
+            sh("pkill -f cogansu_root_request.sh; rm -f $SEEN; setsid nohup sh $SCRIPT >/dev/null 2>&1 &")
         } else {
-            sh("rm -f $SCRIPT; pkill -f cogansu_root_request.sh; pkill -f 'inotifyd - /data/system:wy'")
+            sh("rm -f $SCRIPT $SEEN; pkill -f cogansu_root_request.sh; pkill -f 'inotifyd - /data/system:wy'")
         }
         prefs(context).edit { putBoolean(KEY_ENABLED, enabled) }
     }
 
-    private fun usesRoot(packageName: String, apk: String): Boolean {
-        if (packageName in KNOWN) return true
-        val a = quote(apk)
-        val dex = sh(
-            "for d in $($BUSYBOX unzip -l $a | grep -o 'classes[0-9]*\\.dex'); do " +
-                "$BUSYBOX unzip -p $a ${'$'}d | grep -a -q -E '$DEX_MARKERS' && echo yes && break; done"
-        )
-        if (dex.contains("yes")) return true
-        return sh("dumpsys package ${quote(packageName)} | grep -q ACCESS_SUPERUSER && echo yes").contains("yes")
-    }
-
-    /** Called by the watcher: asks once about every new or updated app that uses root. */
-    suspend fun check(context: Context) = lock.withLock {
-        if (!isEnabled(context)) return@withLock
-        val prefs = prefs(context)
-        val seen = prefs.getStringSet(KEY_SEEN, emptySet())!!
-        val never = neverAsk(context)
-        val apps = installed()
-        for ((packageName, apk, uid) in apps) {
-            if ("$packageName|$apk" in seen || packageName == context.packageName || packageName in never) continue
-            if (Natives.getAppProfile(packageName, uid).allowSu) continue
-            if (usesRoot(packageName, apk)) notify(context, packageName, uid)
-        }
-        // Store what is installed now: removed apps drop out, an update changes the path.
-        prefs.edit { putStringSet(KEY_SEEN, apps.map { "${it.first}|${it.second}" }.toSet()) }
+    /** The script found [packageName] using root: ask, unless it already has root or must never be asked. */
+    fun ask(context: Context, packageName: String, uid: Int) {
+        if (!isEnabled(context) || packageName == context.packageName || packageName in neverAsk(context)) return
+        if (Natives.getAppProfile(packageName, uid).allowSu) return
+        notify(context, packageName, uid)
     }
 
     @SuppressLint("MissingPermission") // checked by areNotificationsEnabled()

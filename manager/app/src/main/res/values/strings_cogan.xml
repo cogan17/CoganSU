@@ -14,7 +14,7 @@
     <string name="cogan_link_telegram_summary">News, releases and help</string>
     <string name="cogan_based_on">Based on KernelSU by weishu and its contributors (GPL-3.0)</string>
     <string name="cogan_root_request_setting">Ask root for new apps</string>
-    <string name="cogan_root_request_setting_summary">When an app that uses root is installed or updated, CoganSU asks once whether to allow it</string>
+    <string name="cogan_root_request_setting_summary">Apps that use root and are not allowed yet are asked about once: when this is turned on, and when an app is installed or updated</string>
     <string name="cogan_root_request_channel">Root requests</string>
     <string name="cogan_root_request_title">%1$s wants root access</string>
     <string name="cogan_root_request_text">Allow adds it to Superuser. Deny means it is never asked about again.</string>

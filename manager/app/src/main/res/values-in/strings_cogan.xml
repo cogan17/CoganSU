@@ -14,7 +14,7 @@
     <string name="cogan_link_telegram_summary">Kabar, rilis dan bantuan</string>
     <string name="cogan_based_on">Berbasis KernelSU karya weishu dan para kontributornya (GPL-3.0)</string>
     <string name="cogan_root_request_setting">Tanya root untuk aplikasi baru</string>
-    <string name="cogan_root_request_setting_summary">Saat aplikasi pengguna root dipasang atau diperbarui, CoganSU bertanya sekali apakah diizinkan</string>
+    <string name="cogan_root_request_setting_summary">Aplikasi pengguna root yang belum diizinkan ditanya sekali: saat fitur ini dinyalakan, dan saat aplikasi dipasang atau diperbarui</string>
     <string name="cogan_root_request_channel">Permintaan root</string>
     <string name="cogan_root_request_title">%1$s meminta akses root</string>
     <string name="cogan_root_request_text">Izinkan menambahkannya ke Superuser. Tolak berarti tidak ditanya lagi.</string>
