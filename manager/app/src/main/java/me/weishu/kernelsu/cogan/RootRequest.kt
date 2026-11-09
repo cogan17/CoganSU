@@ -101,11 +101,15 @@ object RootRequest {
         return """
             |#!/system/bin/sh
             |# CoganSU: Settings > Ask root for new apps (cogan/RootRequest.kt). Removed when it is turned off.
+            |# Out of the manager's cgroup: Android kills and freezes every process the app started (owner's phone,
+            |# 10 Nov 2026: the watcher was gone after leaving CoganSU). From service.d at boot this changes nothing.
+            |echo ${'$'}${'$'} > /sys/fs/cgroup/cgroup.procs 2>/dev/null
             |B=$BUSYBOX
             |KNOWN=" ${KNOWN.joinToString(" ")} "
             |R="${DEX_MARKERS.joinToString(" ") { "-e $it" }}"
             |mkdir -p $STATE; touch $SEEN
-            |ask() { am broadcast -n $target -a $ACTION_CHECK --es $EXTRA_PACKAGE "${'$'}1" --ei $EXTRA_UID "${'$'}2" </dev/null >/dev/null 2>&1; }
+            |# -f 32: FLAG_INCLUDE_STOPPED_PACKAGES, so the question still comes after CoganSU was swiped away.
+            |ask() { am broadcast -f 32 -n $target -a $ACTION_CHECK --es $EXTRA_PACKAGE "${'$'}1" --ei $EXTRA_UID "${'$'}2" </dev/null >/dev/null 2>&1; }
             |scan() {
             |  pm list packages -3 -f -U | sed 's/^package://' > $STATE/list
             |  # Fast pass, seconds: known root apps and ACCESS_SUPERUSER, read for every app in one dumpsys.
@@ -155,7 +159,8 @@ object RootRequest {
         } else {
             sh("rm -f $SCRIPT $SEEN; pkill -f cogansu_root_request.sh; pkill -f 'inotifyd - /data/system:wy'")
         }
-        prefs(context).edit { putBoolean(KEY_ENABLED, enabled) }
+        // "seen" was the first build's state in prefs (24 KB on the owner's phone); it now lives in $SEEN.
+        prefs(context).edit { putBoolean(KEY_ENABLED, enabled).remove("seen") }
     }
 
     /** The script found [packageName] using root: ask, unless it already has root or must never be asked. */
