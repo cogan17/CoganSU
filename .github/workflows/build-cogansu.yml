@@ -80,6 +80,8 @@ jobs:
           git config user.email 79615344+cogan17@users.noreply.github.com
           merge=(); [ "$GITHUB_REF_NAME" = "$DEFAULT_BRANCH" ] && merge=(--merge)
           python3 scripts/gabung_kernelsu.py "${merge[@]}" --out "$GITHUB_OUTPUT" --summary "$GITHUB_STEP_SUMMARY"
+          # Gate, not a lock: after KernelSU main is merged, CoganSU's own features must still be there.
+          python3 scripts/cek_fitur_cogansu.py --summary "$GITHUB_STEP_SUMMARY"
           if grep -q '^merged=yes$' "$GITHUB_OUTPUT"; then
             # GITHUB_TOKEN may not push upstream commits that change .github/workflows, nor to a protected
             # branch: then a person merges KernelSU main once (a PR), and the next build goes on by itself.
