@@ -58,7 +58,7 @@ object RootRequest {
 
     // Root libraries in the dex. "/system/bin/su" and RootBeer are NOT signs: banks, games and
     // WhatsApp carry them to detect root (owner's scan, 9 Nov 2026).
-    private const val DEX_MARKERS = "Lcom/topjohnwu/superuser/|Leu/chainfire/libsuperuser/|Lcom/stericson/"
+    private val DEX_MARKERS = listOf("Lcom/topjohnwu/superuser/", "Leu/chainfire/libsuperuser/", "Lcom/stericson/")
 
     private val lock = Mutex()
 
@@ -103,9 +103,9 @@ object RootRequest {
             |# CoganSU: Settings > Ask root for new apps (cogan/RootRequest.kt). Removed when it is turned off.
             |B=$BUSYBOX
             |KNOWN=" ${KNOWN.joinToString(" ")} "
-            |R='$DEX_MARKERS'
+            |R="${DEX_MARKERS.joinToString(" ") { "-e $it" }}"
             |mkdir -p $STATE; touch $SEEN
-            |ask() { am broadcast -n $target -a $ACTION_CHECK --es $EXTRA_PACKAGE "${'$'}1" --ei $EXTRA_UID "${'$'}2" >/dev/null 2>&1; }
+            |ask() { am broadcast -n $target -a $ACTION_CHECK --es $EXTRA_PACKAGE "${'$'}1" --ei $EXTRA_UID "${'$'}2" </dev/null >/dev/null 2>&1; }
             |scan() {
             |  pm list packages -3 -f -U | sed 's/^package://' > $STATE/list
             |  # Fast pass, seconds: known root apps and ACCESS_SUPERUSER, read for every app in one dumpsys.
@@ -119,14 +119,20 @@ object RootRequest {
             |      *) echo "${'$'}l ${'$'}u" >> $STATE/slow ;;
             |    esac
             |  done < $STATE/list
-            |  # Slow pass, in the background of the same run: root libraries inside the dex.
+            |  # Slow pass: root libraries inside the dex, 4 apps at a time (fixed-string search, no regex).
+            |  n=0
             |  while read -r l u; do
-            |    a=${'$'}{l%=*}; p=${'$'}{l##*=}; uid=${'$'}{u#uid:}; uid=${'$'}{uid%%,*}
-            |    echo "${'$'}p|${'$'}a" >> $SEEN
-            |    for d in ${'$'}(${'$'}B unzip -l "${'$'}a" 2>/dev/null | grep -o 'classes[0-9]*\.dex'); do
-            |      ${'$'}B unzip -p "${'$'}a" "${'$'}d" 2>/dev/null | grep -a -q -E "${'$'}R" && ask "${'$'}p" "${'$'}uid" && break
-            |    done
+            |    dexcheck "${'$'}l" "${'$'}u" </dev/null &
+            |    n=${'$'}((n + 1)); [ ${'$'}((n % 4)) -eq 0 ] && wait
             |  done < $STATE/slow
+            |  wait
+            |}
+            |dexcheck() {
+            |  a=${'$'}{1%=*}; p=${'$'}{1##*=}; uid=${'$'}{2#uid:}; uid=${'$'}{uid%%,*}
+            |  echo "${'$'}p|${'$'}a" >> $SEEN
+            |  for d in ${'$'}(${'$'}B unzip -l "${'$'}a" 2>/dev/null | grep -o 'classes[0-9]*\.dex'); do
+            |    ${'$'}B unzip -p "${'$'}a" "${'$'}d" 2>/dev/null | grep -a -q -F ${'$'}R && ask "${'$'}p" "${'$'}uid" && return
+            |  done
             |}
             |until [ "${'$'}(getprop sys.boot_completed)" = 1 ]; do sleep 5; done
             |# Twice: an app installed while the first (long) check ran is caught by the second, quick one.
