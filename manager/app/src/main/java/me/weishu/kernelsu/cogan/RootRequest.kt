@@ -150,7 +150,8 @@ object RootRequest {
     suspend fun setEnabled(context: Context, enabled: Boolean) = lock.withLock {
         if (enabled) {
             sh("mkdir -p /data/adb/service.d && printf '%s' ${quote(script(context))} > $SCRIPT && chmod 755 $SCRIPT")
-            sh("pkill -f cogansu_root_request.sh; rm -f $SEEN; setsid nohup sh $SCRIPT >/dev/null 2>&1 &")
+            // Old watchers too: their inotifyd outlives the script (owner's phone, 10 Nov 2026: 3 left over).
+            sh("pkill -f cogansu_root_request.sh; pkill -f 'inotifyd - /data/system:wy'; rm -f $SEEN; setsid nohup sh $SCRIPT >/dev/null 2>&1 &")
         } else {
             sh("rm -f $SCRIPT $SEEN; pkill -f cogansu_root_request.sh; pkill -f 'inotifyd - /data/system:wy'")
         }
