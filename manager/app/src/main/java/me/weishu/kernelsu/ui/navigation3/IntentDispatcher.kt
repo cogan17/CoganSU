@@ -114,7 +114,9 @@ private fun resolveIntent(intent: Intent): PendingAction? {
         return PendingAction.InstallModule(
             uri = uri,
             displayName = getDisplayName(uri),
-            requiresConfirmation = false,
+            // CoganSU: always ask. MainActivity is exported and the same token is in copied ksu:// links,
+            // so whoever knows it could install any ZIP as root without a question (audit r23, 10 Nov 2026).
+            requiresConfirmation = true,
         )
     }
 

@@ -6,6 +6,8 @@
    See https://developer.android.com/about/versions/12/backup-restore
 -->
 <full-backup-content>
+    <!-- CoganSU: the intent token is never backed up (SettingsRepositoryImpl). -->
+    <exclude domain="sharedpref" path="cogan_intent_token.xml" />
     <!--
    <include domain="sharedpref" path="."/>
    <exclude domain="sharedpref" path="device.xml"/>

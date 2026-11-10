@@ -31,6 +31,7 @@ class SettingsRepositoryImpl : SettingsRepository {
 
     private companion object {
         private const val INTENT_TOKEN_KEY = "intent_token"
+        private const val INTENT_TOKEN_PREFS = "cogan_intent_token" // CoganSU
         private val secureRandom = SecureRandom()
     }
 
@@ -169,13 +170,19 @@ class SettingsRepositoryImpl : SettingsRepository {
         get() = prefs.getBoolean(KEY_USE_SOFT_REBOOT, false)
         set(value) = prefs.edit { putBoolean(KEY_USE_SOFT_REBOOT, value) }
 
+    // CoganSU: the token lives in its own file, left out of Android backup and device transfer
+    // (res/xml/*backup*, *extraction*), so a restore never brings an old token back (audit r23, 10 Nov 2026).
+    // The old token in settings is dropped: links and shortcuts made before this update stop working.
+    private val tokenPrefs by lazy { ksuApp.getSharedPreferences(INTENT_TOKEN_PREFS, Context.MODE_PRIVATE) }
+
     override val intentToken: String
         get() {
-        val existing = prefs.getString(INTENT_TOKEN_KEY, null)
+        val existing = tokenPrefs.getString(INTENT_TOKEN_KEY, null)
         if (!existing.isNullOrBlank()) return existing
         val token = ByteArray(32).also(secureRandom::nextBytes)
             .joinToString(separator = "") { "%02x".format(it) }
-        prefs.edit { putString(INTENT_TOKEN_KEY, token) }
+        tokenPrefs.edit { putString(INTENT_TOKEN_KEY, token) }
+        prefs.edit { remove(INTENT_TOKEN_KEY) }
         return token
     }
 
