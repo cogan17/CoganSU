@@ -37,6 +37,14 @@ private const val KSU_SCHEME = "ksu"
 private const val ICON_HOST = "icon"
 private const val INTERNAL_BLOB_DOWNLOAD_HOST = "blob-download.kernelsu.internal"
 
+// CoganSU: the module's pages are https://mui.kernelsu.org/... (and blobs they create); nothing else.
+internal fun isModulePage(url: Uri): Boolean = when (url.scheme?.lowercase()) {
+    "https" -> url.host.equals(WEB_DOMAIN, ignoreCase = true)
+    "blob" -> url.schemeSpecificPart.startsWith("https://$WEB_DOMAIN/", ignoreCase = true)
+    "about" -> url.toString() == "about:blank"
+    else -> false
+}
+
 private fun loadDownloadJs(context: Context): String {
     return context.assets.open("webview/download.js").bufferedReader(Charsets.UTF_8).use { it.readText() }
 }
@@ -117,6 +125,8 @@ internal suspend fun prepareWebView(
                 )
                 .build()
 
+            val downloadInterface = WebUIDownloadInterface(webUIState)
+
             // WebViewClient
             webView.webViewClient = object : WebViewClient() {
                 override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
@@ -154,6 +164,15 @@ internal suspend fun prepareWebView(
                         }
                     }
                     return webViewAssetLoader.shouldInterceptRequest(url)
+                }
+
+                // CoganSU: `ksu` (root shell) is injected into every page this WebView shows, so only
+                // the module's own pages may load here; web links open in the browser instead.
+                override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                    val url = request.url
+                    if (isModulePage(url)) return false
+                    if (request.isForMainFrame) downloadInterface.openExternal(url.toString())
+                    return true
                 }
 
                 override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
@@ -207,7 +226,6 @@ internal suspend fun prepareWebView(
 
             // JS Interface
             val webviewInterface = WebViewInterface(webUIState)
-            val downloadInterface = WebUIDownloadInterface(webUIState)
             webUIState.webViewInterface = webviewInterface
             webUIState.downloadInterface = downloadInterface
             webUIState.webView = webView

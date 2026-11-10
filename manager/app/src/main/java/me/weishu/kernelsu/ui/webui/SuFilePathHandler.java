@@ -212,6 +212,13 @@ public final class SuFilePathHandler implements WebViewAssetLoader.PathHandler {
             if (file != null) {
                 InputStream is = openFile(file, mShell);
                 String mimeType = guessMimeType(path);
+                if ("text/html".equals(mimeType)) {
+                    // CoganSU: frames and form posts cannot pull web content into the page that holds
+                    // the root `ksu` bridge (Android injects it into every frame).
+                    return new WebResourceResponse(mimeType, null, 200, "OK",
+                            java.util.Collections.singletonMap("Content-Security-Policy",
+                                    "frame-src 'self' blob: data:; form-action 'self'"), is);
+                }
                 return new WebResourceResponse(mimeType, null, is);
             } else {
                 Log.e(TAG, String.format(
