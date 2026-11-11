@@ -37,20 +37,30 @@ object CoganTools {
         return runCatching { LocalDate.of(2000 + y.toInt(), mo.toInt(), d.toInt()) }.getOrNull()
     }
 
+    /** Revision number N of a vYY.MM.DD-rN tag. */
+    internal fun revision(tag: String): Int? = Regex("""-r(\d+)$""").find(tag)?.groupValues?.get(1)?.toIntOrNull()
+
     /**
-     * The newest Cogan Kernel release when it was built on a later day than the running kernel.
-     * shortcut: compares days, so a second build on the same day is not offered; upgrade when Cogan Bridge reports rN.
+     * The newest Cogan Kernel release when it is newer than the running kernel: by rN when the kernel
+     * reports its own tag (Cogan Bridge identity), else by day (older kernels; a second build on the
+     * same day is then not offered).
      */
     fun kernelUpdate(info: CoganKernelInfo): KernelUpdate? {
         if (info.state != CoganKernelState.Detected) return null
-        val running = buildDate(info.build) ?: return null
+        val runningRevision = revision(info.tag)
+        val runningDate = buildDate(info.build)
+        if (runningRevision == null && runningDate == null) return null
         return runCatching {
             ksuApp.okhttpClient.newCall(Request.Builder().url(KERNEL_LATEST_RELEASE_API).build()).execute().use { response ->
                 if (!response.isSuccessful) return null
                 val json = JSONObject(response.body.string())
                 val tag = json.getString("tag_name")
-                val released = tagDate(tag) ?: return null
-                if (released.isAfter(running)) KernelUpdate(tag, json.getString("html_url")) else null
+                val newer = if (runningRevision != null) {
+                    (revision(tag) ?: return null) > runningRevision
+                } else {
+                    (tagDate(tag) ?: return null).isAfter(runningDate)
+                }
+                if (newer) KernelUpdate(tag, json.getString("html_url")) else null
             }
         }.getOrNull()
     }

@@ -67,6 +67,8 @@ CHECKS = [
     ("Cek keamanan dan cadangkan boot / security check, boot backup", f"{KT}/cogan/CoganTools.kt", "fun backupBoot()"),
     ("Cek keamanan dan cadangkan boot (Material) / Home rows", f"{KT}/ui/screen/home/HomeMaterial.kt", "rememberCoganToolActions(coganKernel)"),
     ("Cek keamanan dan cadangkan boot (Miuix) / Home rows", f"{KT}/ui/screen/home/HomeMiuix.kt", "rememberCoganToolActions(coganKernel)"),
+    ("Identitas asli Cogan Kernel (Cogan Bridge identity) / real identity", f"{KT}/cogan/Cogan.kt",
+     '"abi", "release", "banner", "identity", "device", "soc"'),
     ("Teks CoganSU (EN) / strings", f"{APP}/res/values/strings_cogan.xml", 'name="cogan_kernel_title"'),
     ("Teks CoganSU (ID) / strings", f"{APP}/res/values-in/strings_cogan.xml", 'name="cogan_kernel_title"'),
     ("Ikon CoganSU / launcher icon", f"{APP}/res/mipmap-xxxhdpi/ic_launcher_cogan.png", None),
