@@ -244,7 +244,8 @@ private fun StatusCard(
             when (state.lkmMode) {
                 null -> ""
                 true -> "LKM"
-                else -> "GKI"
+                // CoganSU: built into Cogan Kernel (Cogan Bridge answered) instead of the generic GKI label.
+                else -> if (state.coganKernel.state == CoganKernelState.Detected) "Cogan" else "GKI"
             }
         } else ""
 

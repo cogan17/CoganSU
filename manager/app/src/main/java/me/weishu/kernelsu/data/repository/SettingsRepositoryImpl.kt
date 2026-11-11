@@ -17,6 +17,7 @@ import me.weishu.kernelsu.ui.util.execKsud
 import me.weishu.kernelsu.ui.util.getFeaturePersistValue
 import me.weishu.kernelsu.ui.util.getFeatureValue
 import me.weishu.kernelsu.ui.util.getFeatureStatus
+import me.weishu.kernelsu.ui.theme.COGAN_GOLD
 import java.security.SecureRandom
 
 private const val SETTINGS_PREFS = "settings"
@@ -60,7 +61,7 @@ class SettingsRepositoryImpl : SettingsRepository {
         set(value) = prefs.edit { putBoolean("miuix_monet", value) }
 
     override var keyColor: Int
-        get() = prefs.getInt("key_color", 0)
+        get() = prefs.getInt("key_color", COGAN_GOLD) // CoganSU: gold unless the user picked a color or wallpaper (0)
         set(value) = prefs.edit { putInt("key_color", value) }
 
     override var colorStyle: String

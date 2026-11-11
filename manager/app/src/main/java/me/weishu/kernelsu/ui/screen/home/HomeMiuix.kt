@@ -278,7 +278,8 @@ private fun StatusCard(
                 val workingMode = when (state.lkmMode) {
                     null -> null
                     true -> "LKM"
-                    else -> "GKI"
+                    // CoganSU: built into Cogan Kernel (Cogan Bridge answered) instead of the generic GKI label.
+                    else -> if (state.coganKernel.state == CoganKernelState.Detected) "Cogan" else "GKI"
                 }
                 val workingText = "${stringResource(id = R.string.home_working)}$workingState"
 
