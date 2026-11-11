@@ -29,6 +29,8 @@ data class HomeUiState(
     // CoganSU
     val isSupportedDevice: Boolean = Cogan.isSupportedDevice(),
     val coganKernel: CoganKernelInfo = CoganKernelInfo.Unknown,
+    // CoganSU: a newer Cogan Kernel release, checked with the manager update (same setting).
+    val coganKernelUpdate: me.weishu.kernelsu.cogan.CoganTools.KernelUpdate? = null,
 ) {
     val isSELinuxPermissive: Boolean
         get() = systemInfo.selinuxStatus == "Permissive"

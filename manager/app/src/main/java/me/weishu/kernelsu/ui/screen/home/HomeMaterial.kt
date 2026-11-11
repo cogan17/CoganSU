@@ -25,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.DeveloperBoard
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FilterList
@@ -34,6 +35,7 @@ import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Tag
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.rounded.Block
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Warning
@@ -69,6 +71,7 @@ import me.weishu.kernelsu.R
 import me.weishu.kernelsu.cogan.Cogan
 import me.weishu.kernelsu.cogan.CoganKernelInfo
 import me.weishu.kernelsu.cogan.CoganKernelState
+import me.weishu.kernelsu.cogan.rememberCoganToolActions
 import me.weishu.kernelsu.ui.component.WarningLevel
 import me.weishu.kernelsu.ui.component.dialog.rememberConfirmDialog
 import me.weishu.kernelsu.ui.component.material.ExpressiveScaffold
@@ -101,6 +104,13 @@ fun HomePagerMaterial(
         ) {
             if (state.checkUpdateEnabled) {
                 UpdateCard(state = state, actions = actions)
+            }
+            state.coganKernelUpdate?.let { update -> // CoganSU
+                WarningCard(
+                    message = stringResource(R.string.cogan_kernel_update, update.tag),
+                    level = WarningLevel.Notice,
+                    onClick = { actions.onOpenUrl(update.url) },
+                )
             }
             if (state.showManagerPrBuildWarning) {
                 WarningCard(stringResource(id = R.string.home_pr_build_warning), level = WarningLevel.Notice)
@@ -152,7 +162,7 @@ fun HomePagerMaterial(
                 actions = actions,
             )
             InfoCard(systemInfo = state.systemInfo, coganKernel = state.coganKernel)
-            SupportLinks(onOpenUrl = actions.onOpenUrl)
+            SupportLinks(onOpenUrl = actions.onOpenUrl, coganKernel = state.coganKernel)
             Spacer(
                 Modifier.height(
                     bottomInnerPadding + if (!Natives.isFullFeatured())
@@ -387,8 +397,28 @@ private fun coganKernelSummary(info: CoganKernelInfo): String = when (info.state
 private fun SupportLinks(
     onOpenUrl: (String) -> Unit,
     modifier: Modifier = Modifier,
+    coganKernel: CoganKernelInfo = CoganKernelInfo.Unknown,
 ) {
+    val tools = rememberCoganToolActions(coganKernel)
     SegmentedColumn(modifier = modifier.fillMaxWidth()) {
+        item {
+            SegmentedListItem(
+                onClick = tools.securityCheck,
+                headlineContent = { Text(stringResource(R.string.cogan_check_title)) },
+                supportingContent = { Text(stringResource(R.string.cogan_check_summary)) },
+                leadingContent = { Icon(Icons.Filled.VerifiedUser, stringResource(R.string.cogan_check_title)) },
+                trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
+            )
+        }
+        item {
+            SegmentedListItem(
+                onClick = tools.backupBoot,
+                headlineContent = { Text(stringResource(R.string.cogan_backup_title)) },
+                supportingContent = { Text(stringResource(R.string.cogan_backup_summary)) },
+                leadingContent = { Icon(Icons.Filled.Backup, stringResource(R.string.cogan_backup_title)) },
+                trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
+            )
+        }
         item {
             SegmentedListItem(
                 onClick = { onOpenUrl(Cogan.KERNEL_RELEASES_URL) },

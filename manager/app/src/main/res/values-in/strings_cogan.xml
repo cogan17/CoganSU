@@ -13,4 +13,30 @@
     <string name="cogan_link_telegram_title">Komunitas Telegram</string>
     <string name="cogan_link_telegram_summary">Kabar, rilis dan bantuan</string>
     <string name="cogan_based_on">Berbasis KernelSU karya weishu dan para kontributornya (GPL-3.0)</string>
+    <!-- Alat Cogan di Beranda (cogan/CoganTools.kt) -->
+    <string name="cogan_kernel_update">Cogan Kernel %1$s tersedia. Ketuk untuk membuka rilisnya.</string>
+    <string name="cogan_check_title">Cek keamanan</string>
+    <string name="cogan_check_summary">SELinux, pengerasan kernel, SUSFS dan apa yang terlihat oleh aplikasi</string>
+    <string name="cogan_check_copy">Salin</string>
+    <string name="cogan_check_copied">Hasil disalin</string>
+    <string name="cogan_check_selinux">SELinux: %1$s (harus Enforcing)</string>
+    <string name="cogan_check_dmesg">dmesg_restrict: %1$s (harus 1, aplikasi tidak bisa membaca log kernel)</string>
+    <string name="cogan_check_kptr">kptr_restrict: %1$s (harus 2, alamat kernel disembunyikan)</string>
+    <string name="cogan_check_bpf">unprivileged_bpf_disabled: %1$s (Android sendiri menulis 0; SELinux yang menjaga)</string>
+    <string name="cogan_check_susfs_on">SUSFS tertanam di kernel</string>
+    <string name="cogan_check_susfs_off">SUSFS tidak ditemukan: root lebih mudah terdeteksi aplikasi</string>
+    <string name="cogan_check_uname_real">Aplikasi melihat kernel asli %1$s. Isi nilai stok di WebUI SUSFS (lihat Panduan pasang)</string>
+    <string name="cogan_check_uname_stock">Aplikasi melihat kernel stok %1$s</string>
+    <string name="cogan_check_uname_other">Aplikasi melihat %1$s, bukan kernel stok HyperOS HP ini</string>
+    <string name="cogan_check_adb_on">Debugging USB menyala: sebagian aplikasi bank menolak jalan. Matikan bila tidak dipakai</string>
+    <string name="cogan_check_adb_off">Debugging USB mati</string>
+    <string name="cogan_check_dev_on">Opsi pengembang menyala: sebagian aplikasi bank menolak jalan</string>
+    <string name="cogan_check_dev_off">Opsi pengembang mati</string>
+    <string name="cogan_check_bootloader">Verified boot: %1$s (orange = bootloader terbuka, wajar dengan kernel kustom)</string>
+    <string name="cogan_backup_title">Cadangkan boot</string>
+    <string name="cogan_backup_summary">boot, init_boot dan vendor_boot ke /sdcard/Coganisme</string>
+    <string name="cogan_backup_confirm">boot.img, init_boot.img dan vendor_boot.img slot aktif disalin ke folder baru di %1$s, beserta SHA-256. Partisi hanya dibaca.</string>
+    <string name="cogan_backup_start">Cadangkan</string>
+    <string name="cogan_backup_done">Tersimpan di %1$s. Salin juga folder ini ke PC: dipakai untuk memulihkan HP bila flash gagal.</string>
+    <string name="cogan_tool_failed">Gagal: %1$s</string>
 </resources>
