@@ -27,7 +27,7 @@ from cogansu_common import (KERNEL_REPO, RELEASE_TAG, SUSFS_BRANCH, SUSFS_KSU_PA
 
 ROOT = Path(__file__).resolve().parent.parent
 BRIDGE_ABI = "1"
-BRIDGE_FILES = ("abi", "release", "banner", "device", "soc")  # what manager/.../cogan/Cogan.kt reads
+BRIDGE_FILES = ("abi", "release", "banner", "identity", "device", "soc")  # what manager/.../cogan/Cogan.kt reads
 
 
 def ok(flag, lang):

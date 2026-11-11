@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import me.weishu.kernelsu.BuildConfig
 import me.weishu.kernelsu.Natives
 import me.weishu.kernelsu.cogan.Cogan
+import me.weishu.kernelsu.cogan.CoganTools
 import me.weishu.kernelsu.data.repository.SettingsRepository
 import me.weishu.kernelsu.data.repository.SettingsRepositoryImpl
 import me.weishu.kernelsu.getKernelVersion
@@ -43,6 +44,9 @@ class HomeViewModel(
             if (baseState.checkUpdateEnabled) {
                 val latestVersionInfo = withContext(Dispatchers.IO) { checkNewVersion() }
                 _uiState.update { it.copy(latestVersionInfo = latestVersionInfo) }
+                // CoganSU: newer Cogan Kernel release than the running one.
+                val kernelUpdate = withContext(Dispatchers.IO) { CoganTools.kernelUpdate(baseState.coganKernel) }
+                _uiState.update { it.copy(coganKernelUpdate = kernelUpdate) }
             }
         }
     }

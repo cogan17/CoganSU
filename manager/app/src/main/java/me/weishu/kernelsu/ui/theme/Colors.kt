@@ -3,7 +3,11 @@ package me.weishu.kernelsu.ui.theme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 
+/** CoganSU: gold of the crown in the CoganSU icon (declared first: file properties start in order). */
+val COGAN_GOLD = Color(0xFFC9A04A).toArgb()
+
 val keyColorOptions = listOf(
+    COGAN_GOLD, // CoganSU: the gold of the CoganSU icon, first and the default for new installs
     Color(0xFFF44336).toArgb(),
     Color(0xFFE91E63).toArgb(),
     Color(0xFF9C27B0).toArgb(),

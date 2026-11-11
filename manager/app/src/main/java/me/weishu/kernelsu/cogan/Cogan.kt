@@ -22,7 +22,7 @@ object Cogan {
 
     /** Cogan Bridge, the root-only sysfs ABI that Cogan Kernel exports (kernel/patches/cogan_bridge.c). */
     private const val BRIDGE_DIR = "/sys/kernel/cogan"
-    private val BRIDGE_FILES = listOf("abi", "release", "banner", "device", "soc")
+    private val BRIDGE_FILES = listOf("abi", "release", "banner", "identity", "device", "soc")
 
     /** True on the phone CoganSU is made for. Never decided from the kernel name, which can be disguised. */
     fun isSupportedDevice(): Boolean {
@@ -60,12 +60,16 @@ object Cogan {
         // linux_banner ends with UTS_VERSION ("#1 SMP PREEMPT Tue Nov  4 10:12:34 UTC 2026"), after the compiler's ")".
         val banner = values["banner"].orEmpty()
         val build = banner.lastIndexOf(") #").let { if (it < 0) "" else banner.substring(it + 2).trim() }
+        // "<tag>|<Cogan release>|<real build time>" (Cogan-Kernel builds since 11 Nov 2026): real even when the
+        // build disguised uname/banner or set its own Build Time. Older kernels lack it: release/banner above.
+        val identity = values["identity"].orEmpty().split('|').takeIf { it.size == 3 && it.all(String::isNotBlank) }
         return CoganKernelInfo(
             state = CoganKernelState.Detected,
-            release = release,
+            release = identity?.get(1) ?: release,
             device = values["device"].orEmpty(),
             soc = values["soc"].orEmpty(),
-            build = build,
+            build = identity?.let { "${it[0]} · ${it[2]}" } ?: build,
+            tag = identity?.get(0).orEmpty(),
         )
     }
 }
@@ -89,6 +93,8 @@ data class CoganKernelInfo(
     val soc: String = "",
     /** Kernel build line from Cogan Bridge's banner, e.g. "#1 SMP PREEMPT Tue Nov  4 10:12:34 UTC 2026". */
     val build: String = "",
+    /** Release tag vYY.MM.DD-rN of the running build, from Cogan Bridge's identity; empty on older kernels. */
+    val tag: String = "",
 ) {
     /** The kernel was built for a phone other than the one it booted on. */
     val deviceMismatch: Boolean

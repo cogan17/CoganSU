@@ -13,4 +13,30 @@
     <string name="cogan_link_telegram_title">Telegram community</string>
     <string name="cogan_link_telegram_summary">News, releases and help</string>
     <string name="cogan_based_on">Based on KernelSU by weishu and its contributors (GPL-3.0)</string>
+    <!-- Cogan tools on Home (cogan/CoganTools.kt) -->
+    <string name="cogan_kernel_update">Cogan Kernel %1$s is available. Tap to open the release.</string>
+    <string name="cogan_check_title">Security check</string>
+    <string name="cogan_check_summary">SELinux, kernel hardening, SUSFS and what apps can see</string>
+    <string name="cogan_check_copy">Copy</string>
+    <string name="cogan_check_copied">Result copied</string>
+    <string name="cogan_check_selinux">SELinux: %1$s (should be Enforcing)</string>
+    <string name="cogan_check_dmesg">dmesg_restrict: %1$s (should be 1, apps cannot read the kernel log)</string>
+    <string name="cogan_check_kptr">kptr_restrict: %1$s (should be 2, kernel addresses hidden)</string>
+    <string name="cogan_check_bpf">unprivileged_bpf_disabled: %1$s (Android sets 0 itself; SELinux guards it)</string>
+    <string name="cogan_check_susfs_on">SUSFS is built into the kernel</string>
+    <string name="cogan_check_susfs_off">SUSFS not found: root is easier for apps to detect</string>
+    <string name="cogan_check_uname_real">Apps see the real kernel %1$s. Set the stock values in the SUSFS WebUI (see the installation guide)</string>
+    <string name="cogan_check_uname_stock">Apps see the stock kernel %1$s</string>
+    <string name="cogan_check_uname_other">Apps see %1$s, which is not a stock HyperOS kernel of this phone</string>
+    <string name="cogan_check_adb_on">USB debugging is on: some bank apps refuse to run. Turn it off when not needed</string>
+    <string name="cogan_check_adb_off">USB debugging is off</string>
+    <string name="cogan_check_dev_on">Developer options are on: some bank apps refuse to run</string>
+    <string name="cogan_check_dev_off">Developer options are off</string>
+    <string name="cogan_check_bootloader">Verified boot: %1$s (orange = unlocked bootloader, expected with a custom kernel)</string>
+    <string name="cogan_backup_title">Back up boot</string>
+    <string name="cogan_backup_summary">boot, init_boot and vendor_boot to /sdcard/Coganisme</string>
+    <string name="cogan_backup_confirm">boot.img, init_boot.img and vendor_boot.img of the active slot are copied to a new folder in %1$s, with SHA-256 sums. The partitions are only read.</string>
+    <string name="cogan_backup_start">Back up</string>
+    <string name="cogan_backup_done">Saved in %1$s. Copy this folder to a PC too: it restores the phone if a flash goes wrong.</string>
+    <string name="cogan_tool_failed">Failed: %1$s</string>
 </resources>

@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.DeveloperBoard
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FilterList
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Tag
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.rounded.CheckCircleOutline
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.runtime.Composable
@@ -63,6 +65,7 @@ import me.weishu.kernelsu.R
 import me.weishu.kernelsu.cogan.Cogan
 import me.weishu.kernelsu.cogan.CoganKernelInfo
 import me.weishu.kernelsu.cogan.CoganKernelState
+import me.weishu.kernelsu.cogan.rememberCoganToolActions
 import me.weishu.kernelsu.ui.component.WarningLevel
 import me.weishu.kernelsu.ui.component.dialog.rememberConfirmDialog
 import me.weishu.kernelsu.ui.component.miuix.WarningCard
@@ -136,6 +139,13 @@ fun HomePagerMiuix(
                         if (state.checkUpdateEnabled) {
                             UpdateCard(state = state, actions = actions)
                         }
+                        state.coganKernelUpdate?.let { update -> // CoganSU
+                            WarningCard(
+                                message = stringResource(R.string.cogan_kernel_update, update.tag),
+                                level = WarningLevel.Notice,
+                                onClick = { actions.onOpenUrl(update.url) },
+                            )
+                        }
                         if (state.showManagerPrBuildWarning) {
                             WarningCard(stringResource(id = R.string.home_pr_build_warning), level = WarningLevel.Notice)
                         } else if (state.showKernelPrBuildWarning) {
@@ -192,6 +202,7 @@ fun HomePagerMiuix(
                         )
                         SupportLinks(
                             onOpenUrl = actions.onOpenUrl,
+                            coganKernel = state.coganKernel,
                             modifier = Modifier.fillMaxWidth(),
                         )
                         Spacer(
@@ -278,7 +289,8 @@ private fun StatusCard(
                 val workingMode = when (state.lkmMode) {
                     null -> null
                     true -> "LKM"
-                    else -> "GKI"
+                    // CoganSU: built into Cogan Kernel (Cogan Bridge answered) instead of the generic GKI label.
+                    else -> if (state.coganKernel.state == CoganKernelState.Detected) "Cogan" else "GKI"
                 }
                 val workingText = "${stringResource(id = R.string.home_working)}$workingState"
 
@@ -465,8 +477,36 @@ private fun coganKernelSummary(info: CoganKernelInfo): String = when (info.state
 private fun SupportLinks(
     onOpenUrl: (String) -> Unit,
     modifier: Modifier = Modifier,
+    coganKernel: CoganKernelInfo = CoganKernelInfo.Unknown,
 ) {
+    val tools = rememberCoganToolActions(coganKernel)
     Card(modifier = modifier) {
+        ArrowPreference(
+            title = stringResource(R.string.cogan_check_title),
+            summary = stringResource(R.string.cogan_check_summary),
+            startAction = {
+                Icon(
+                    imageVector = Icons.Filled.VerifiedUser,
+                    contentDescription = stringResource(R.string.cogan_check_title),
+                    modifier = Modifier.padding(end = 6.dp),
+                    tint = colorScheme.onBackground,
+                )
+            },
+            onClick = tools.securityCheck,
+        )
+        ArrowPreference(
+            title = stringResource(R.string.cogan_backup_title),
+            summary = stringResource(R.string.cogan_backup_summary),
+            startAction = {
+                Icon(
+                    imageVector = Icons.Filled.Backup,
+                    contentDescription = stringResource(R.string.cogan_backup_title),
+                    modifier = Modifier.padding(end = 6.dp),
+                    tint = colorScheme.onBackground,
+                )
+            },
+            onClick = tools.backupBoot,
+        )
         ArrowPreference(
             title = stringResource(R.string.cogan_link_kernel_title),
             summary = stringResource(R.string.cogan_link_kernel_summary),
