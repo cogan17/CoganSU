@@ -187,29 +187,52 @@ pub fn switch_mnt_ns(pid: i32) -> Result<()> {
     Ok(())
 }
 
-fn switch_cgroup(grp: &str, pid: u32) {
+fn switch_cgroup(grp: &str, pid: u32) -> bool {
     let path = Path::new(grp).join("cgroup.procs");
     if !path.exists() {
-        return;
+        return false;
     }
 
     let fp = OpenOptions::new().append(true).open(path);
     if let std::result::Result::Ok(mut fp) = fp {
-        let _ = write!(fp, "{pid}");
+        return write!(fp, "{pid}").is_ok();
     }
+    false
+}
+
+/// Put a root process where init puts its root services: `<base>/uid_0/pid_<pid>`, with base
+/// `/sys/fs/cgroup/system` (Android 15+) or `/sys/fs/cgroup` (older uid/pid layout). On a stock phone
+/// the root cgroup only holds init and kernel threads, so a module daemon or su shell there stands out
+/// (Cogan-Kernel issue #194: Futile Test turned Normal once the root processes were moved this way).
+/// Falls back to the root cgroup, as before, when the uid/pid hierarchy is missing or refuses the write.
+fn switch_cgroup_v2(pid: u32) {
+    for base in ["/sys/fs/cgroup/system", "/sys/fs/cgroup"] {
+        let uid0 = Path::new(base).join("uid_0");
+        if !uid0.is_dir() {
+            continue;
+        }
+        let dir = uid0.join(format!("pid_{pid}"));
+        if (std::fs::create_dir(&dir).is_ok() || dir.is_dir())
+            && dir.to_str().is_some_and(|d| switch_cgroup(d, pid))
+        {
+            return;
+        }
+        let _ = std::fs::remove_dir(&dir);
+    }
+    switch_cgroup("/sys/fs/cgroup", pid);
 }
 
 pub fn switch_cgroups() {
     let pid = std::process::id();
-    switch_cgroup("/acct", pid);
-    switch_cgroup("/dev/cg2_bpf", pid);
-    switch_cgroup("/sys/fs/cgroup", pid);
+    let _ = switch_cgroup("/acct", pid);
+    let _ = switch_cgroup("/dev/cg2_bpf", pid);
+    switch_cgroup_v2(pid);
 
     if getprop("ro.config.per_app_memcg")
         .as_ref()
         .is_none_or(|prop| prop != "false")
     {
-        switch_cgroup("/dev/memcg/apps", pid);
+        let _ = switch_cgroup("/dev/memcg/apps", pid);
     }
 }
 
